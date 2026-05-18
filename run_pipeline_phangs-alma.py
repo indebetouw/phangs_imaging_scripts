@@ -14,7 +14,7 @@ casa_enabled = is_casa_installed()
 # YOU SHOULD EDIT THINGS BELOW THIS #
 
 # Path to your master key
-master_key_file = "path/to/master_key.txt"
+master_key_file = "phangs-alma_keys/master_key_mc.txt"
 
 # Steps to run
 do_singledish = False

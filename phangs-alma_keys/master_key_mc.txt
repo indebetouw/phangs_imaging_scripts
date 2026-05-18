@@ -176,16 +176,15 @@
 
 # Locations
 
-key_dir        	    /Users/ri3e/local/github/phangs_imaging_scripts/phangs-alma_keys
+key_dir        	    /Users/ri3e/local/github/phangs_imaging_scripts/phangs-alma_keys/
 cleanmask_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/cleanmasks/
-imaging_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/imaging/
-postprocess_root	/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/postprocess/
-derived_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/derived/
+imaging_root		/lustre/cv/users/rindebet/org/
+postprocess_root	/lustre/cv/users/rindebet/org/post/
+derived_root		/lustre/cv/users/rindebet/org/derived/
 release_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/release/
-ms_root			    /export/bell-tycho/leroy.42/reduction/alma/phangs-alma/uvdata/
-ms_root			    /data/young/leroy.42/alma_data/PHANGS/
-singledish_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/singledish/v4_singledish/
-vfield_root		    /export/bell-tycho/leroy.42/reduction/alma/phangs-alma/vfields/
+ms_root			    /lustre/cv/users/rindebet/org/
+singledish_root		/lustre/cv/users/rindebet/org/
+vfield_root		    /lustre/cv/users/rindebet/org/vfields/
 
 # Data files
 
