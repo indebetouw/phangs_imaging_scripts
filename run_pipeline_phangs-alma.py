@@ -26,11 +26,11 @@ do_release = False
 
 # Targets to process
 targets = [
-    "some_exciting_galaxy",
+    "GMC255",
 ]
 
 line_products = [
-    "a_thrilling_line",
+    "co21",
 ]
 interf_configs = [
     "7m",
