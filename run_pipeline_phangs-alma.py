@@ -3,7 +3,7 @@ import sys
 from casatasks import casalog
 
 # Add analysisUtils to the path. Make sure to set this to where you have analysisUtils downloaded!
-au_path = "path/to/analysis_scripts"
+au_path = "/home/casa/contrib/bitbucket/AIV/analysis_scripts/"
 sys.path.append(au_path)
 
 import phangsPipeline as ppl
@@ -14,31 +14,31 @@ casa_enabled = is_casa_installed()
 # YOU SHOULD EDIT THINGS BELOW THIS #
 
 # Path to your master key
-master_key_file = "phangs-alma_keys/master_key_mc.txt"
+master_key_file = "/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/phangs-alma_keys/master_key_mc.txt"
 
 # Steps to run
 do_singledish = False
 do_staging = True
 do_imaging = True
-do_postprocess = True
-do_derived = True
+do_postprocess = False
+do_derived = False
 do_release = False
 
 # Targets to process
 targets = [
-    "GMC255",
+    "GMC225",
 ]
 
 line_products = [
     "co21",
 ]
 interf_configs = [
-    "7m",
-    "12m",
+    "12m+7m",
+#    "12m",
 ]
 feather_configs = [
-    "7m+tp",
-    '12m+7m+tp',
+#    "7m+tp",
+#    '12m+7m+tp',
 ]
 
 no_cont = True
@@ -148,7 +148,7 @@ if casa_enabled:
     if do_staging:
         uv_handler.loop_stage_uvdata(
             do_copy=True,
-            do_contsub=True,
+            do_contsub=False,   # changed manually for MC data but should really be in a parameter file somewhere instead
             do_extract_line=False,
             do_extract_cont=False,
             require_full_line_coverage=True,

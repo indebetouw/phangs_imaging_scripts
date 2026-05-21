@@ -1,7 +1,7 @@
 SOURCE              PID                 FIELD                         ARR    OBS MSKEY                                                                                                                   
 --------------------------------------------------------------------------------- ------------------------------------------------------------------------------------------------------------------------
-GMC225              2016.1.00203        LMC_GMC225                     7m       1 lmc/GMC225/uid___A002_Xb93c37_X35f5_targets_line.ms                                                                     
-GMC225              2016.1.00203        LMC_GMC225                     7m       2 lmc/GMC225/uid___A002_Xbf4033_X27d_targets_line.ms                                                                      
+GMC225              2016.1.00203        LMC_GMC225                     7m       1 2016.1.00203.kawamura/B6_uid___A001_X87c_X8a9_G225_CO21/7M_X8ad/uid___A002_Xb93c37_X35f5_targets_line.ms                                                                     
+GMC225              2016.1.00203        LMC_GMC225                     12m      2 2016.1.00203.kawamura/B6_uid___A001_X87c_X8a9_G225_CO21/TM_X8ab/uid___A002_Xbf4033_X27d_targets_line.ms
 N166                2013.1.01091        LMC_N166                       7m       1 v1/lmc/N166/N166_B6_line.ms                                                                                             
 N159E               2012.1.00554        N159E                          12m      1 2012.1.00554.fukui/B6_uid___A002_X5d7935_X3b3_N159E_CO21/TM_X3b5/uid___A002_X74deb6_X14df_targets_line.ms/              
 N159E               2012.1.00554        N159E                          12m      2 2012.1.00554.fukui/B6_uid___A002_X5d7935_X3b3_N159E_CO21/TM_X3b5/uid___A002_X7c18c1_X4c7_targets_line.ms/               

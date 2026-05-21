@@ -176,31 +176,31 @@
 
 # Locations
 
-key_dir        	    /Users/ri3e/local/github/phangs_imaging_scripts/phangs-alma_keys/
-cleanmask_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/cleanmasks/
-imaging_root		/lustre/cv/users/rindebet/org/
-postprocess_root	/lustre/cv/users/rindebet/org/post/
-derived_root		/lustre/cv/users/rindebet/org/derived/
+key_dir        	    /lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/phangs-alma_keys
+cleanmask_root		/lustre/cv/users/rindebet/org/phangs/cleanmasks/
+imaging_root		/lustre/cv/users/rindebet/org/phangs/
+postprocess_root	/lustre/cv/users/rindebet/org/phangs/post/
+derived_root		/lustre/cv/users/rindebet/org/phangs/derived/
 release_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/release/
 ms_root			    /lustre/cv/users/rindebet/org/
 singledish_root		/lustre/cv/users/rindebet/org/
-vfield_root		    /lustre/cv/users/rindebet/org/vfields/
+vfield_root		    /lustre/cv/users/rindebet/org/phangs/vfields/
 
 # Data files
 
-ms_key			    ms_file_key.txt
-singledish_key		singledish_key.txt
-cleanmask_key		cleanmask_key.txt
-distance_key		distance_key.txt
-window_key          window_key.txt
+ms_key			    ms_file_key_mc_12CO21.txt
+singledish_key		singledish_key_mc.txt
+cleanmask_key		cleanmask_key_mc.txt
+distance_key		distance_key_mc.txt
+window_key          window_key_mc.txt
 
 # Definitions and mapping
 
-config_key		config_definitions.txt
-target_key		target_definitions.txt
+config_key		config_definitions_mc.txt
+target_key		target_definitions_mc.txt
 moment_key		moment_key.txt
 derived_key		derived_key.txt
-imaging_key		imaging_recipes.txt
+imaging_key		imaging_recipes_mc.txt
 linmos_key		linearmosaic_definitions.txt
 override_key    overrides.txt
 dir_key			dir_key.txt
