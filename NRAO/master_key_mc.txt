@@ -190,13 +190,13 @@ vfield_root		    /lustre/cv/users/rindebet/org/phangs/vfields/
 
 ms_key			    ms_file_key_mc_12CO21.txt
 singledish_key		singledish_key_mc.txt
-cleanmask_key		cleanmask_key_mc.txt
+cleanmask_key		cleanmask_key.txt
 distance_key		distance_key_mc.txt
-window_key          window_key_mc.txt
+window_key          window_key.txt
 
 # Definitions and mapping
 
-config_key		config_definitions_mc.txt
+config_key		config_definitions.txt
 target_key		target_definitions_mc.txt
 moment_key		moment_key.txt
 derived_key		derived_key.txt
