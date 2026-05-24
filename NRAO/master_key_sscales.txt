@@ -177,18 +177,18 @@
 # Locations
 
 key_dir        	    /lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/NRAO/
-cleanmask_root		/lustre/cv/users/rindebet/org/phangs/cleanmasks/
-imaging_root		/lustre/cv/users/rindebet/org/phangs/
-postprocess_root	/lustre/cv/users/rindebet/org/phangs/post/
-derived_root		/lustre/cv/users/rindebet/org/phangs/derived/
+cleanmask_root		/lustre/cv/users/rindebet/galaxies/array_reduction/cleanmasks/
+imaging_root		/lustre/cv/users/rindebet/galaxies/array_reduction/
+postprocess_root	/lustre/cv/users/rindebet/galaxies/array_reduction/post/
+derived_root		/lustre/cv/users/rindebet/galaxies/array_reduction/derived/
 release_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/release/
-ms_root			    /lustre/cv/users/rindebet/org/
-singledish_root		/lustre/cv/users/rindebet/org/
-vfield_root		    /lustre/cv/users/rindebet/org/phangs/vfields/
+ms_root			    /lustre/cv/users/rindebet/galaxies/array_reduction/
+singledish_root		/lustre/cv/users/rindebet/galaxies/array_reduction/
+vfield_root		    /lustre/cv/users/rindebet/galaxies/array_reduction/vfields/
 
 # Data files
 
-ms_key			    ms_file_key_mc_12CO21.txt
+ms_key			    ms_key_sscales.txt
 singledish_key		singledish_key_mc.txt
 cleanmask_key		cleanmask_key.txt
 distance_key		distance_key_mc.txt
