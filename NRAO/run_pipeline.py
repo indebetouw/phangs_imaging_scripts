@@ -14,11 +14,11 @@ casa_enabled = is_casa_installed()
 # YOU SHOULD EDIT THINGS BELOW THIS #
 
 # Path to your master key
-master_key_file = "/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/phangs-alma_keys/master_key_mc.txt"
+master_key_file = "/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/NRAO/master_key_mc.txt"
 
 # Steps to run
 do_singledish = False
-do_staging = True
+do_staging = False
 do_imaging = True
 do_postprocess = False
 do_derived = False
@@ -43,7 +43,7 @@ feather_configs = [
 
 no_cont = True
 
-imaging_method = "tclean"
+imaging_method = "sdintimaging"
 
 # Switches for derived products
 do_convolve = True

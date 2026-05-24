@@ -176,7 +176,7 @@
 
 # Locations
 
-key_dir        	    /lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/phangs-alma_keys
+key_dir        	    /lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/NRAO/
 cleanmask_root		/lustre/cv/users/rindebet/org/phangs/cleanmasks/
 imaging_root		/lustre/cv/users/rindebet/org/phangs/
 postprocess_root	/lustre/cv/users/rindebet/org/phangs/post/

@@ -21,3 +21,5 @@
 # directory defined in the master_key.
 
 ##########################################################################
+
+GMC225 co21 2016.1.00203.kawamura/B6_uid___A001_X87c_X8a9_G225_CO21/TP_X8b1/member.uid___A001_X87c_X8b1.LMC_GMC225.spw17.I.sd.im.hann.fits
