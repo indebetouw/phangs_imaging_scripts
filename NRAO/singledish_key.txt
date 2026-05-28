@@ -22,4 +22,4 @@
 
 ##########################################################################
 
-GMC225 co21 2016.1.00203.kawamura/B6_uid___A001_X87c_X8a9_G225_CO21/TP_X8b1/member.uid___A001_X87c_X8b1.LMC_GMC225.spw17.I.sd.im.hann.fits
+ngc5236_5 co21 ngc5236/2025.1.00576.L/science_goal.uid___A001_X3841_X7b/group.uid___A001_X3841_X7c/member.uid___A001_X3841_X83/product/member.uid___A001_X3841_X83.NGC_5236_sci.spw21.cube.I.sd.fits

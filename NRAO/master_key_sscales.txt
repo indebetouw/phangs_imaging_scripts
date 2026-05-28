@@ -181,23 +181,23 @@ cleanmask_root		/lustre/cv/users/rindebet/galaxies/array_reduction/cleanmasks/
 imaging_root		/lustre/cv/users/rindebet/galaxies/array_reduction/
 postprocess_root	/lustre/cv/users/rindebet/galaxies/array_reduction/post/
 derived_root		/lustre/cv/users/rindebet/galaxies/array_reduction/derived/
-release_root		/export/bell-tycho/leroy.42/reduction/alma/phangs-alma/release/
-ms_root			    /lustre/cv/users/rindebet/galaxies/array_reduction/
-singledish_root		/lustre/cv/users/rindebet/galaxies/array_reduction/
+release_root		/lustre/cv/users/rindebet/galaxies/array_reduction/release/
+ms_root			    /lustre/cv/users/rindebet/galaxies/
+singledish_root		/lustre/cv/users/rindebet/galaxies/
 vfield_root		    /lustre/cv/users/rindebet/galaxies/array_reduction/vfields/
 
 # Data files
 
 ms_key			    ms_key_sscales.txt
-singledish_key		singledish_key_mc.txt
+singledish_key		singledish_key.txt
 cleanmask_key		cleanmask_key.txt
-distance_key		distance_key_mc.txt
+distance_key		distance_key.txt
 window_key          window_key.txt
 
 # Definitions and mapping
 
 config_key		config_definitions.txt
-target_key		target_definitions_mc.txt
+target_key		target_definitions.txt
 moment_key		moment_key.txt
 derived_key		derived_key.txt
 imaging_key		imaging_recipes_mc.txt

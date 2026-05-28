@@ -1,0 +1,288 @@
+##############################################################################
+# Load routines, initialize handlers
+##############################################################################
+
+import os
+import sys
+
+from astropy.io import fits
+from casatasks import casalog
+
+# initialize mpicasa
+import casampi.private.start_mpi
+from casampi.MPIEnvironment import MPIEnvironment
+# TODO hook up the logger correctly
+print("MPI server rank list: {}".format(MPIEnvironment.mpi_server_rank_list()))
+
+casalog.showconsole(True)  
+
+# Use boolean flags to set the steps to be performed when the pipeline
+# is called. See descriptions below (but only edit here).
+
+# Locate the master key
+sdir = '/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/'
+key_file = sdir+'NRAO/master_key_sscales.txt'
+sys.path.append(os.path.expanduser(sdir))
+sys.path.append(os.path.expanduser("/home/casa/contrib/bitbucket/AIV/analysis_scripts/"))
+chunksize = 10
+
+
+# Pass the target name from the cmd line
+
+if len(sys.argv) != 4:
+    raise ValueError('SLURM processing requires exactly 3 command line arguments: target, stagestring, job_array_id')
+
+target = sys.argv[-3]
+
+try: 
+    chunk_num = int(sys.argv[-1])
+except ValueError:
+    chunk_num = -1
+
+do_staging = False
+do_imaging = False
+do_assemble = False
+do_postprocess = False
+do_derived = False
+
+stagestring = sys.argv[-2]
+
+from phangsPipeline import handlerKeys as kh
+this_kh = kh.KeyHandler(master_key=key_file)
+
+if 'S' in stagestring:
+    do_staging = True
+    print('Adding STAGING step to this processing run')
+    from phangsPipeline import handlerVis as uvh
+    this_uvh = uvh.VisHandler(key_handler=this_kh)
+    this_uvh.set_targets(only=[target])
+    this_uvh.set_interf_configs(only=['7m+12m'])
+    this_uvh.set_line_products()
+    this_uvh.set_no_cont_products(True)
+
+
+if 'I' in stagestring:
+    do_imaging = True
+    print('Adding IMAGING step to this processing run')
+    from phangsPipeline import handlerImaging as imh
+    from phangsPipeline.handlerImagingChunked import ImagingChunkedHandler
+    this_imh = imh.ImagingHandler(key_handler=this_kh)
+    this_imh.set_targets(only=[target])
+    this_imh.set_interf_configs(only=['7m+12m'])
+    this_imh.set_no_cont_products(True)
+    this_imh.set_line_products(only=['co21'])
+
+if 'A' in stagestring:
+    do_assemble = True
+    print('Adding ASSEMBLY step to this processing run')
+    from phangsPipeline import handlerImaging as imh
+    from phangsPipeline.handlerImagingChunked import ImagingChunkedHandler
+    this_imh = imh.ImagingHandler(key_handler=this_kh)
+
+
+if 'P' in stagestring:
+    do_postprocess = True
+    print('Adding POSTPROCESS step to this processing run')
+    from phangsPipeline import handlerPostprocess as pph
+    this_pph = pph.PostProcessHandler(key_handler=this_kh)
+    this_pph.set_targets(only=[target])
+    this_pph.set_interf_configs(only=['meerkat'])
+    this_pph.set_feather_configs(only=[''])
+
+if 'D' in stagestring:
+    do_derived = True
+    print('Adding DERIVED step to this processing run')
+
+
+if target.endswith('.py'):
+    raise ValueError('No target set at command line')
+
+from phangsPipeline import phangsLogger as pl
+pl.setup_logger(level='DEBUG', logfile=None)
+
+# Imports
+
+# sys.path.insert(1, )
+
+from phangsPipeline import handlerDerived as der
+
+
+# Initialize the various handler objects. First initialize the
+# KeyHandler, which reads the master key and the files linked in the
+# master key. Then feed this keyHandler, which has all the project
+# data, into the other handlers (VisHandler, ImagingHandler,
+# PostProcessHandler), which run the actual pipeline using the project
+# definitions from the KeyHandler.
+
+
+# Make any missing directories
+
+this_kh.make_missing_directories(imaging=True, derived=True, postprocess=True, release=True)
+
+##############################################################################
+# Set up what we do this run
+##############################################################################
+
+
+# Set the configs (arrays), spectral products (lines), and targets to
+# consider.
+
+# Set the targets. Called with only () it will use all targets. The
+# only= , just= , start= , stop= criteria allow one to build a smaller
+# list. 
+
+# Set the configs. Set both interf_configs and feather_configs just to
+# determine which cubes will be processed. The only effect in this
+# derive product calculation is to determine which cubes get fed into
+# the calculation.
+
+# Set the line products. Similarly, this just determines which cubes
+# are fed in. Right now there's no derived product pipeline focused on
+# continuum maps.
+
+# ASIDE: In PHANGS-ALMA we ran a cheap parallelization by running
+# several scripts with different start and stop values in parallel. If
+# you are running a big batch of jobs you might consider scripting
+# something similar.
+
+# Note here that we need to set the targets, configs, and lines for
+# *all three* relevant handlers - the VisHandler (uvh), ImagingHandler
+# (imh), and PostprocessHandler (pph). The settings below will stage
+# combined 12m+7m data sets (including staging C18O and continuum),
+# image the CO 2-1 line from these, and then postprocess the CO 2-1
+# cubes.
+
+
+
+
+
+
+
+##############################################################################
+# Run staging
+##############################################################################
+
+# "Stage" the visibility data. This involves copying the original
+# calibrated measurement set, continuum subtracting (if requested),
+# extraction of requested lines and continuum data, regridding and
+# concatenation into a single measurement set. The overwrite=True flag
+# is needed to ensure that previous runs can be overwritten.
+
+if do_staging:
+    this_uvh.loop_stage_uvdata(do_copy=True, do_contsub=True,
+                               do_extract_line=False, do_extract_cont=False,
+                               do_remove_staging=False, overwrite=True,
+                               intent='TARGET*')
+
+    this_uvh.loop_stage_uvdata(do_copy=False, do_contsub=False,
+                               do_extract_line=True, do_extract_cont=False,
+                               do_remove_staging=False, overwrite=True)
+
+    this_uvh.loop_stage_uvdata(do_copy=False, do_contsub=False,
+                               do_extract_line=False, do_extract_cont=True,
+                               do_remove_staging=False, overwrite=True)
+
+    this_uvh.loop_stage_uvdata(do_copy=False, do_contsub=False,
+                               do_extract_line=False, do_extract_cont=False,
+                               do_remove_staging=True, overwrite=True)
+
+##############################################################################
+# Step through imaging
+##############################################################################
+
+# Image the concatenated, regridded visibility data. The full loop
+# involves applying any user-supplied clean mask, multiscale imaging,
+# mask generation for the single scale clean, and single scale
+# clean. The individual parts can be turned on or off with flags to
+# the imaging loop call but this call does everything.
+
+if do_imaging:
+    this_imh = ImagingChunkedHandler(target, '12m+7m', 'co21', this_kh,
+                                    chunksize=chunksize)
+    if chunk_num >= this_imh.nchunks:
+        raise ValueError(f"Chunk number {chunk_num} is greater than the number of chunks {this_imh.nchunks}")
+
+    print(f"Chunk {chunk_num} of {this_imh.nchunks}")
+    this_imh.run_imaging(do_all=True, chunk_num=chunk_num)
+
+if do_assemble:
+    this_imh = ImagingChunkedHandler(target, '12m+7m', 'co21', this_kh,
+                                     chunksize=chunksize, make_temp_dir=False,
+                                     )
+    # When running per chunk, combining into final cubes is a separate call
+    this_imh.task_complete_gather_into_cubes(root_name='all')
+
+##############################################################################
+# Step through postprocessing
+##############################################################################
+
+# Postprocess the data in CASA after imaging. This involves primary
+# beam correction, linear mosaicking, feathering, conversion to Kelvin
+# units, and some downsampling to save space.
+
+if do_postprocess:
+    this_pph.loop_postprocess(do_prep=True, do_feather=True,
+                              do_mosaic=True, do_cleanup=True)
+
+if do_derived:
+    import astropy
+    import spectral_cube
+
+    this_der = der.DerivedHandler(key_handler=this_kh)
+    this_der.set_interf_configs(only=['meerkat'])
+    this_der.set_feather_configs(only=[])
+    this_der.set_line_products(only=['hi21cm'])
+    this_der.set_targets(only=[target])
+    do_convolve = True
+    do_noise = True
+    do_strictmask = True
+    do_broadmask = True
+    do_moments = True
+    do_secondary = True
+
+    if do_convolve:
+        this_der.loop_derive_products(do_convolve=True, do_noise=False,
+                                    do_strictmask=False, do_broadmask=False,
+                                    do_moments=False, do_secondary=False)
+
+    # Estimate the noise from the signal-free regions of the data to
+    # produce a three-dimensional noise model for each cube.
+
+    if do_noise:
+        this_der.loop_derive_products(do_convolve=False, do_noise=True,
+                                    do_strictmask=False, do_broadmask=False,
+                                    do_moments=False, do_secondary=False)
+
+    # Construct "strict masks" for each cube at each resolution.
+
+    if do_strictmask:
+        this_der.loop_derive_products(do_convolve=False, do_noise=False,
+                                    do_strictmask=True, do_broadmask=False,
+                                    do_moments=False, do_secondary=False)
+
+    # Combine the strict masks across all linked resolutions to form
+    # "broad masks" that have high completeness.
+
+    if do_broadmask:
+        this_der.loop_derive_products(do_convolve=False, do_noise=False,
+                                    do_strictmask=False, do_broadmask=True,
+                                    do_moments=False, do_secondary=False)
+
+    # Apply the masks and use the cubes and noise models to produce moment
+    # maps with associated uncertainty.
+
+    if do_moments:
+        this_der.loop_derive_products(do_convolve=False, do_noise=False,
+                                    do_strictmask=False, do_broadmask=False,
+                                    do_moments=True, do_secondary=False)
+
+    # Run a second round of moment calculations. This enables claculation
+    # of moments that depend on other, earlier moment map calculations
+
+    if do_secondary:
+        this_der.loop_derive_products(do_convolve=False, do_noise=False,
+                                    do_strictmask=False, do_broadmask=False,
+                                    do_moments=False, do_secondary=True)
+
+        
+

@@ -14,19 +14,19 @@ casa_enabled = is_casa_installed()
 # YOU SHOULD EDIT THINGS BELOW THIS #
 
 # Path to your master key
-master_key_file = "/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/NRAO/master_key_mc.txt"
+master_key_file = "/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/NRAO/master_key_sscales.txt"
 
 # Steps to run
 do_singledish = False
-do_staging = False
-do_imaging = True
+do_staging = True
+do_imaging = False
 do_postprocess = False
 do_derived = False
 do_release = False
 
 # Targets to process
 targets = [
-    "GMC225",
+    "ngc5236_5",
 ]
 
 line_products = [
@@ -148,9 +148,11 @@ if casa_enabled:
     if do_staging:
         uv_handler.loop_stage_uvdata(
             do_copy=True,
-            do_contsub=False,   # changed manually for MC data but should really be in a parameter file somewhere instead
+            do_contsub=True,   # changed manually to False for Magellanic data, which have already been continuum subtracted in the original MS
             do_extract_line=False,
             do_extract_cont=False,
+            statwt_line=False,
+            statwt_cont=False,
             require_full_line_coverage=True,
             do_remove_staging=False,
             overwrite=True,
@@ -161,6 +163,8 @@ if casa_enabled:
             do_contsub=False,
             do_extract_line=True,
             do_extract_cont=False,
+            statwt_line=False,
+            statwt_cont=False,
             require_full_line_coverage=True,
             do_remove_staging=False,
             overwrite=True,
@@ -171,6 +175,8 @@ if casa_enabled:
             do_contsub=False,
             do_extract_line=False,
             do_extract_cont=True,
+            statwt_line=False,
+            statwt_cont=False,
             require_full_line_coverage=True,
             do_remove_staging=False,
             overwrite=True,
@@ -181,8 +187,10 @@ if casa_enabled:
             do_contsub=False,
             do_extract_line=False,
             do_extract_cont=False,
+            statwt_line=False,
+            statwt_cont=False,
             require_full_line_coverage=True,
-            do_remove_staging=True,
+            do_remove_staging=False,  # for debugging, set to False to keep intermediate products
             overwrite=True,
         )
 

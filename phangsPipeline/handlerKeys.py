@@ -908,7 +908,7 @@ class KeyHandler:
             ms_targets = self._ms_dict.keys()
             for target in ms_targets:
                 if target not in self._target_list:
-                    # logger.error(target+ " is in the measurement set key but not the target list.")
+                    logger.error(target+ " is in the measurement set key but not the target list.")
                     if target not in missing_targets:
                         missing_targets.append(target)
 
@@ -916,7 +916,7 @@ class KeyHandler:
             dir_targets = self._dir_for_target.keys()
             for target in dir_targets:
                 if target not in self._target_list:
-                    # logger.error(target+ " is in the directory key but not the target list.")
+                    logger.error(target+ " is in the directory key but not the target list.")
                     if target not in missing_targets:
                         missing_targets.append(target)
 
@@ -924,7 +924,7 @@ class KeyHandler:
             sd_targets = self._sd_dict.keys()
             for target in sd_targets:
                 if target not in self._target_list:
-                    # logger.error(target+ " is in the single dish key but not the target list.")
+                    logger.error(target+ " is in the single dish key but not the target list.")
                     if target not in missing_targets:
                         missing_targets.append(target)
 
@@ -932,7 +932,7 @@ class KeyHandler:
             linmos_targets = self._linmos_dict.keys()
             for target in linmos_targets:
                 if target not in self._target_list:
-                    # logger.error(target+ " is in the linear mosaic key but not the target list.")
+                    logger.error(target+ " is in the linear mosaic key but not the target list.")
                     if target not in missing_targets:
                         missing_targets.append(target)
 
@@ -940,7 +940,7 @@ class KeyHandler:
             distance_targets = self._distance_dict.keys()
             for target in distance_targets:
                 if target not in self._target_list:
-                    # logger.error(target+ " is in the distance key but not the target list.")
+                    logger.error(target+ " is in the distance key but not the target list.")
                     if target not in missing_targets:
                         missing_targets.append(target)
 
@@ -1109,6 +1109,7 @@ class KeyHandler:
                         local_found_count = 0
                         for ms_root in self._ms_roots:
                             this_ms = ms_root + self._ms_dict[target][project_tag][array_tag][obs_tag]['file']
+                            logger.info(this_ms)
                             if os.path.isdir(this_ms):
                                 found = True
                                 found_count += 1
