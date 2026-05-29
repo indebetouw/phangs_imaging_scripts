@@ -72,7 +72,10 @@ if __name__ == '__main__':
 
     pl.clf()
     print(os.getcwd())
-    aU.plotmosaic("../m83/ngc5236_5_12m+7m_co21.ms/",coord="absolute")
+    myms="/lustre/cv/users/rindebet/galaxies/m83/targms/uid___A002_X13128dc_X1194c_targets.ms/"
+    myms="/lustre/cv/users/rindebet/galaxies/m83/targms/uid___A002_X133b089_X6951_targets.ms/"
+    myms="/lustre/cv/users/rindebet/galaxies/m83/targms/uid___A002_X1314bf3_X268e_targets.ms"
+    aU.plotmosaic(myms,coord="absolute")
 
     ax = pl.gca()
     text_labels = None

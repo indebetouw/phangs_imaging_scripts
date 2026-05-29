@@ -26,8 +26,8 @@ do_release = False
 
 # Targets to process
 targets = [
-    "ngc5236_5",
-]
+    "ngc5236_5A",
+    "ngc5236_5B",]
 
 line_products = [
     "co21",
