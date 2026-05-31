@@ -70,8 +70,8 @@ def estimate_cell_and_imsize(
                                                 intent='',
                                                 pblevel=pblevel,
                                                 )
-    xextent = au_cellsize * au_imsize[0] * 1.2
-    yextent = au_cellsize * au_imsize[1] * 1.2
+    xextent = au_cellsize * au_imsize[0] #* 1.2  # 20260529 RI try small.
+    yextent = au_cellsize * au_imsize[1] #* 1.2
 
     # Make the cell size a nice round number
 
