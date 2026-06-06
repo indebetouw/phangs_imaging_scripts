@@ -30,22 +30,28 @@ chunksize = 10
 # Pass the target name from the cmd line
 
 if len(sys.argv) != 4:
-    raise ValueError('SLURM processing requires exactly 3 command line arguments: target, stagestring, job_array_id')
+    # raise ValueError('SLURM processing requires exactly 3 command line arguments: target, stagestring, job_array_id')
 
-target = sys.argv[-3]
+    target= 'ngc5236_5'  # default for testing
+    stagestring = 'I'  
+    chunk_num = 0  # default for testing    
 
-try: 
-    chunk_num = int(sys.argv[-1])
-except ValueError:
-    chunk_num = -1
+else:
+    target = sys.argv[-3]
+    stagestring = sys.argv[-2]
+    try: 
+        chunk_num = int(sys.argv[-1])
+    except ValueError:
+        chunk_num = -1
+
+
+imaging_method = "sdintimaging"
 
 do_staging = False
 do_imaging = False
 do_assemble = False
 do_postprocess = False
 do_derived = False
-
-stagestring = sys.argv[-2]
 
 from phangsPipeline import handlerKeys as kh
 this_kh = kh.KeyHandler(master_key=key_file)
@@ -56,8 +62,8 @@ if 'S' in stagestring:
     from phangsPipeline import handlerVis as uvh
     this_uvh = uvh.VisHandler(key_handler=this_kh)
     this_uvh.set_targets(only=[target])
-    this_uvh.set_interf_configs(only=['7m+12m'])
-    this_uvh.set_line_products()
+    this_uvh.set_interf_configs(only=['12m+7m'])
+    this_uvh.set_line_products(only=['co21'])
     this_uvh.set_no_cont_products(True)
 
 
@@ -68,7 +74,7 @@ if 'I' in stagestring:
     from phangsPipeline.handlerImagingChunked import ImagingChunkedHandler
     this_imh = imh.ImagingHandler(key_handler=this_kh)
     this_imh.set_targets(only=[target])
-    this_imh.set_interf_configs(only=['7m+12m'])
+    this_imh.set_interf_configs(only=['12m+7m'])
     this_imh.set_no_cont_products(True)
     this_imh.set_line_products(only=['co21'])
 
@@ -86,8 +92,8 @@ if 'P' in stagestring:
     from phangsPipeline import handlerPostprocess as pph
     this_pph = pph.PostProcessHandler(key_handler=this_kh)
     this_pph.set_targets(only=[target])
-    this_pph.set_interf_configs(only=['meerkat'])
-    this_pph.set_feather_configs(only=[''])
+    this_pph.set_interf_configs(only=['12m+7m'])
+    this_pph.set_feather_configs(only=['co21'])
 
 if 'D' in stagestring:
     do_derived = True
@@ -172,19 +178,23 @@ if do_staging:
     this_uvh.loop_stage_uvdata(do_copy=True, do_contsub=True,
                                do_extract_line=False, do_extract_cont=False,
                                do_remove_staging=False, overwrite=True,
-                               intent='TARGET*')
+                               strict_config=False,
+                               intent='*TARGET*')
 
     this_uvh.loop_stage_uvdata(do_copy=False, do_contsub=False,
                                do_extract_line=True, do_extract_cont=False,
+                               strict_config=False,
                                do_remove_staging=False, overwrite=True)
 
     this_uvh.loop_stage_uvdata(do_copy=False, do_contsub=False,
                                do_extract_line=False, do_extract_cont=True,
+                               strict_config=False,
                                do_remove_staging=False, overwrite=True)
 
-    this_uvh.loop_stage_uvdata(do_copy=False, do_contsub=False,
-                               do_extract_line=False, do_extract_cont=False,
-                               do_remove_staging=True, overwrite=True)
+#    this_uvh.loop_stage_uvdata(do_copy=False, do_contsub=False,
+#                               do_extract_line=False, do_extract_cont=False,
+#                               strict_config=False,
+#                               do_remove_staging=True, overwrite=True)
 
 ##############################################################################
 # Step through imaging
@@ -198,7 +208,7 @@ if do_staging:
 
 if do_imaging:
     this_imh = ImagingChunkedHandler(target, '12m+7m', 'co21', this_kh,
-                                    chunksize=chunksize)
+                                    chunksize=chunksize, imaging_method=imaging_method)
     if chunk_num >= this_imh.nchunks:
         raise ValueError(f"Chunk number {chunk_num} is greater than the number of chunks {this_imh.nchunks}")
 
@@ -229,16 +239,18 @@ if do_derived:
     import spectral_cube
 
     this_der = der.DerivedHandler(key_handler=this_kh)
-    this_der.set_interf_configs(only=['meerkat'])
-    this_der.set_feather_configs(only=[])
-    this_der.set_line_products(only=['hi21cm'])
+    this_der.set_interf_configs(only=['12m+7m'])
+    this_der.set_feather_configs(only=['12m+7m'])
+    this_der.set_line_products(only=['co21'])
     this_der.set_targets(only=[target])
-    do_convolve = True
+    this_der.set_no_cont_products(True)
+    
+    do_convolve = False
     do_noise = True
     do_strictmask = True
     do_broadmask = True
     do_moments = True
-    do_secondary = True
+    do_secondary = False
 
     if do_convolve:
         this_der.loop_derive_products(do_convolve=True, do_noise=False,

@@ -18,32 +18,34 @@ master_key_file = "/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts
 
 # Steps to run
 do_singledish = False
-do_staging = True
+do_staging = False
 do_imaging = False
-do_postprocess = False
+do_postprocess = True
 do_derived = False
 do_release = False
 
 # Targets to process
 targets = [
-    "ngc5236_5A",
-    "ngc5236_5B",]
+    "ngc5236_5",
+    #"ngc5236_5B",
+    ]
 
 line_products = [
     "co21",
 ]
 interf_configs = [
     "12m+7m",
-#    "12m",
+    "12m",
 ]
 feather_configs = [
-#    "7m+tp",
-#    '12m+7m+tp',
+    "7m+tp",
+    '12m+7m+tp',
 ]
 
 no_cont = True
 
-imaging_method = "sdintimaging"
+imaging_method = "sdintimaging"  # june 3 tests fail b/c I don't have the SD image around
+#imaging_method = "tclean"
 
 # Switches for derived products
 do_convolve = True

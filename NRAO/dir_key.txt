@@ -28,3 +28,4 @@
 
 # ngc5236_5	 ngc5236
 # ngc5236_6	 ngc5236
+ngc5236_5	 ngc5236_noTM2_mosT

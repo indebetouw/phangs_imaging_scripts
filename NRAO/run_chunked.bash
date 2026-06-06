@@ -1,15 +1,15 @@
 #!/bin/bash
 #SBATCH --account=rindebet
 #SBATCH --time=24:00:00
-#SBATCH --job-name=m83_5
-#SBATCH --output=m83_5_%A_%a.out
-#SBATCH --error=m83_5_%A_%a.err
-#SBATCH --ntasks=4      # number of MPI processes
-#SBATCH --mem=64G      # memory; default unit is megabytes; was 32G/core
+#SBATCH --job-name=m83_5_noT2
+#SBATCH --output=m83_5_noT2_%A_%a.out
+#SBATCH --error=m83_5_noT2_%A_%a.err
+#SBATCH --ntasks=8      # number of MPI processes
+#SBATCH --mem=254G      # memory; default unit is megabytes; was 32G/core
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=rindebet@nrao.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=plwg,batch,batch2
+#SBATCH --partition=plwg,batch2
 
 # Edit these lines to point to correct directory and galaxy name
 export code_dir='/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/NRAO/'

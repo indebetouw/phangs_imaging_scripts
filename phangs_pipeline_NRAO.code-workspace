@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "NRAO"
+		},
+		{
+			"path": "phangsPipeline"
+		},
+		{
+			"path": "../../../../../../../home/casa/contrib/bitbucket/AIV/analysis_scripts"
+		}
+	],
+	"settings": {}
+}
