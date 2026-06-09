@@ -12,6 +12,7 @@ vis="/lustre/cv/users/rindebet/galaxies/array_reduction/ngc5236/ngc5236_5_12m+7m
 tb.open(vis)
 uvw=tb.getcol("UVW")  # in meters
 fld=tb.getcol("FIELD_ID")
+obsID=tb.getcol("OBSERVATION_ID")
 tb.done()
 
 
@@ -47,10 +48,13 @@ if os.path.exists(cache_name):
 	print(f"Loading cached uvdist data from {cache_name}")
 	data = np.load(cache_name, allow_pickle=True)
 	fields_list = data["fields_list"].tolist()
-	radial_means = [arr for arr in data["radial_means"]]
-	radial_valids = [arr for arr in data["radial_valids"]]
-	radial_maxes = [arr for arr in data["radial_maxes"]]
-	total_radial_sum = data["total_radial_sum"]
+	# Ensure loaded arrays have the expected dtypes
+	radial_means = [np.asarray(arr, dtype=float) for arr in data["radial_means"]]
+	radial_valids = [np.asarray(arr, dtype=bool) for arr in data["radial_valids"]]
+	radial_maxes = [np.asarray(arr, dtype=float) for arr in data["radial_maxes"]]
+	# total_radial_sum is stored per-obsID (first axis) — require obs_list
+	total_radial_sum = np.asarray(data["total_radial_sum"], dtype=float)
+	obs_list = data["obs_list"].tolist()
 	radial_count = data["radial_count"]
 	radii_full = data["radii_full"]
 else:
@@ -61,7 +65,9 @@ else:
 	radial_maxes = []
 	fields_list = []
 	radial_count = np.bincount(ridx[mask_r], minlength=len(rbins) - 1)
-	total_radial_sum = np.zeros(len(rbins) - 1, dtype=float)
+	# Track total radial sums independently for each OBSERVATION_ID
+	obs_list = np.unique(obsID)
+	total_radial_sum = np.zeros((len(obs_list), len(rbins) - 1), dtype=float)
 	for f in fields:
 		print(f)
 		sel = (fld == f)
@@ -71,9 +77,8 @@ else:
 		h, _, _ = np.histogram2d(uvw[0][sel], uvw[1][sel], bins=[xedges, yedges])
 		h_flat = h.ravel(order='C')
 
-		# Sum counts in radial bins
+		# Sum counts in radial bins (per-field)
 		radial_sum = np.bincount(ridx[mask_r], weights=h_flat[mask_r], minlength=len(rbins) - 1)
-		total_radial_sum += radial_sum
 		valid = radial_count > 0
 		radial_mean_full = np.zeros(len(rbins) - 1, dtype=float)
 		radial_mean_full[valid] = radial_sum[valid] / radial_count[valid]
@@ -89,6 +94,16 @@ else:
 		radial_maxes.append(radial_max_full)
 		fields_list.append(f)
 
+	# Now compute per-obsID total radial sums (summing all samples belonging to each obsID)
+	for i, o in enumerate(obs_list):
+		sel_obs = (obsID == o)
+		if not np.any(sel_obs):
+			continue
+		h_obs, _, _ = np.histogram2d(uvw[0][sel_obs], uvw[1][sel_obs], bins=[xedges, yedges])
+		h_flat_obs = h_obs.ravel(order='C')
+		radial_sum_obs = np.bincount(ridx[mask_r], weights=h_flat_obs[mask_r], minlength=len(rbins) - 1)
+		total_radial_sum[i, :] = radial_sum_obs
+
 	np.savez_compressed(
 		cache_name,
 		fields_list=np.array(fields_list, dtype=object),
@@ -96,6 +111,7 @@ else:
 		radial_valids=np.array(radial_valids, dtype=object),
 		radial_maxes=np.array(radial_maxes, dtype=object),
 		total_radial_sum=total_radial_sum,
+		obs_list=np.array(obs_list, dtype=object),
 		radial_count=radial_count,
 		radii_full=radii_full,
 	)
@@ -124,18 +140,36 @@ pl.savefig("m83_5_radial_uv_histogram_perfield.png", dpi=300)
 pl.figure(2)
 pl.clf()
 
-# Compute the all-fields-together radial mean using the same radial count per bin
-radial_mean_full_all = np.zeros(len(rbins) - 1, dtype=float)
+# Plot radial means for grouped OBSERVATION_ID sets
 valid_all = radial_count > 0
-radial_mean_full_all[valid_all] = total_radial_sum[valid_all] / radial_count[valid_all]
+obs_groups = {
+    '0-4': [0, 1, 2, 3, 4],
+    '4+6': [4, 6],
+    '7+8': [7, 8],
+}
+def smooth_profile(profile, window=11):
+    kernel = np.ones(window, dtype=float) / window
+    return np.convolve(profile, kernel, mode='same')
 
-pl.plot(radii_full[valid_all], radial_mean_full_all[valid_all], color='k', lw=2, label='All fields combined')
+for label, group_ids in obs_groups.items():
+    mask = np.isin(obs_list, group_ids)
+    if not np.any(mask):
+        continue
+    group_sum = total_radial_sum[mask].sum(axis=0)
+    radial_mean_group = np.zeros(len(rbins) - 1, dtype=float)
+    radial_mean_group[valid_all] = group_sum[valid_all] / radial_count[valid_all]
+    radial_mean_group = smooth_profile(radial_mean_group, window=11)
+    pl.plot(radii_full[valid_all], radial_mean_group[valid_all]/radial_mean_group[valid_all].sum(), label=label)
+
 pl.xlabel('Radius [m]')
 pl.ylabel('Azimuthal average of UV histogram')
-pl.title('Azimuthal average of UV histogram (all fields combined)')
+pl.title('Azimuthal average of UV histogram (grouped OBSERVATION_IDs)')
+pl.xscale("log")
+pl.xlim(8,1e3)
+pl.ylim(0,0.02)
 pl.grid(True)
 pl.legend()
-pl.savefig("m83_5_radial_uv_histogram_allfields.png", dpi=300)
+pl.savefig("m83_5_radial_uv_histogram_obsID_groups.png", dpi=300)
 
 import pdb
 pdb.set_trace()
