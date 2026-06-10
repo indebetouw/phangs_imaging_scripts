@@ -25,7 +25,7 @@ export target='ngc5236_6'
 # A = assemble
 # P = postprocess
 # D = derived
-export stagestring='S'
+export stagestring='I'
 
 #### you shouldn't need to edit below this line
 srun bash
