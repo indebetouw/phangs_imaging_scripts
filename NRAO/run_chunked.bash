@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --account=rindebet
 #SBATCH --time=24:00:00
-#SBATCH --job-name=m83_5_noT2
-#SBATCH --output=m83_5_noT2_%A_%a.out
-#SBATCH --error=m83_5_noT2_%A_%a.err
+#SBATCH --job-name=m83_6_noT2
+#SBATCH --output=m83_6_noT2_%A_%a.out
+#SBATCH --error=m83_6_noT2_%A_%a.err
 #SBATCH --ntasks=8      # number of MPI processes
 #SBATCH --mem=254G      # memory; default unit is megabytes; was 32G/core
 #SBATCH --cpus-per-task=1
@@ -14,7 +14,7 @@
 # Edit these lines to point to correct directory and galaxy name
 export code_dir='/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/NRAO/'
 # export casadir='/lustre/cv/users/rindebet/casa/casa-6.7.5-10-pipeline-2026.1.1.7-py3.12.el8/'
-export target='ngc5236_5'
+export target='ngc5236_6'
 
 # call this file with 
 # sbatch --array=0-5 run_chunked.bash
@@ -25,7 +25,7 @@ export target='ngc5236_5'
 # A = assemble
 # P = postprocess
 # D = derived
-export stagestring='I'
+export stagestring='S'
 
 #### you shouldn't need to edit below this line
 srun bash

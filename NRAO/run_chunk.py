@@ -32,8 +32,8 @@ chunksize = 10
 if len(sys.argv) != 4:
     # raise ValueError('SLURM processing requires exactly 3 command line arguments: target, stagestring, job_array_id')
 
-    target= 'ngc5236_5'  # default for testing
-    stagestring = 'I'  
+    target= 'ngc5236_6'  # default for testing
+    stagestring = 'S'  
     chunk_num = 0  # default for testing    
 
 else:

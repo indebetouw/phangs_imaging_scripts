@@ -29,3 +29,4 @@
 # ngc5236_5	 ngc5236
 # ngc5236_6	 ngc5236
 ngc5236_5	 ngc5236_sdint_mosF
+ngc5236_6	 ngc5236_sdint_mosF
