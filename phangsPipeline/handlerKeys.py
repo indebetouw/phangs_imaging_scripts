@@ -17,16 +17,25 @@ VALID_IMAGING_STAGES = ['dirty', 'multiscale', 'singlescale']
 
 
 class KeyHandler:
-    """
-    Class to handle data files that indicate the names and data sets
-    associated with reducing a large ALMA imaging project.
-    """
 
     def __init__(self,
-                 master_key='key_templates/master_key.txt',
-                 quiet=False,
-                 dochecks=True,
+                 master_key: str = 'key_templates/master_key.txt',
+                 dochecks: bool = True,
                  ):
+        """
+        Class to handle data files that indicate the names and data sets
+        associated with reducing a (generally) ALMA imaging project.
+
+        The KeyHandler generally just gets passed the path to the master key file
+        (which tells the pipeline where to look for other relevant files, imaging recipes
+        etc.), and then will be passed to other handlers for data processing.
+
+        Args:
+            master_key (str, optional): Path to master key file.
+                Defaults to 'key_templates/master_key.txt'.
+            dochecks (bool, optional): Whether to check for missing files.
+                Defaults to True.
+        """
 
         self._dochecks = dochecks
 
@@ -871,7 +880,7 @@ class KeyHandler:
         self._distance_dict = key_readers.batch_read(
             key_list=self._distance_keys, reader_function=key_readers.read_distance_key,
             key_dir=self._key_dir)
-        
+
         self._window_dict = key_readers.batch_read(
             key_list=self._window_keys, reader_function=key_readers.read_window_key,
             key_dir=self._key_dir)
@@ -1343,7 +1352,7 @@ class KeyHandler:
         changeto is true, then change directory to that location.
         """
         return self._get_dir_for_target(target=target, changeto=changeto, vfield=True)
-    
+
     def get_cleanmask_dir_for_target(self, target=None, changeto=False):
         """
         Return the release working directory given a target name. If
@@ -1497,7 +1506,7 @@ class KeyHandler:
             return None
         if 'interf_config' not in self._config_dict.keys():
             return None
-        interf_configs = self._config_dict['interf_config'].keys()
+        interf_configs = list(self._config_dict['interf_config'].keys())
         this_list = \
             list_utils.select_from_list(interf_configs, skip=skip, only=only, loose=True)
         return this_list
@@ -1514,7 +1523,7 @@ class KeyHandler:
             return None
         if 'feather_config' not in self._config_dict.keys():
             return None
-        feather_configs = self._config_dict['feather_config'].keys()
+        feather_configs = list(self._config_dict['feather_config'].keys())
         this_list = \
             list_utils.select_from_list(feather_configs, skip=skip, only=only, loose=True)
         return this_list
@@ -1530,7 +1539,7 @@ class KeyHandler:
             return None
         if 'singledish_config' not in self._config_dict.keys():
             return None
-        singledish_configs = self._config_dict['singledish_config'].keys()
+        singledish_configs = list(self._config_dict['singledish_config'].keys())
         this_list = \
             list_utils.select_from_list(singledish_configs, skip=skip, only=only, loose=True)
         return this_list
@@ -1562,7 +1571,7 @@ class KeyHandler:
             return []
         if 'line_product' not in self._config_dict.keys():
             return []
-        line_products = self._config_dict['line_product'].keys()
+        line_products = list(self._config_dict['line_product'].keys())
         this_list = \
             list_utils.select_from_list(line_products, skip=skip, only=only, loose=True)
         return this_list
@@ -1578,7 +1587,7 @@ class KeyHandler:
             return []
         if 'cont_product' not in self._config_dict.keys():
             return []
-        cont_products = self._config_dict['cont_product'].keys()
+        cont_products = list(self._config_dict['cont_product'].keys())
         this_list = \
             list_utils.select_from_list(cont_products, skip=skip, only=only, loose=True)
         return this_list
@@ -1731,7 +1740,7 @@ class KeyHandler:
                     distance = self._distance_dict[target_name]['distance']
 
         return distance
-    
+
     def get_window_for_target(self, target=None):
         """
         Get the velocity window (in km/s) associated with a target. If the
@@ -2696,7 +2705,7 @@ class KeyHandler:
 
         return feather_config_dict[feather_config]['interf_config']
 
-    def get_clean_scales_for_config(
+    def get_clean_scales_arcsec_for_config(
             self,
             config=None,
     ):
@@ -2708,12 +2717,92 @@ class KeyHandler:
         if config is None:
             return None
 
-        if config in self._config_dict['interf_config'].keys():
-            this_dict = self._config_dict['interf_config'][config]
-        else:
+        clean_scales_arcsec = self._config_dict.get("interf_config", {}).get(config, {}).get("clean_scales_arcsec", [])
+
+        return clean_scales_arcsec
+
+    def get_clean_scales_beam_for_config(
+            self,
+            config=None,
+    ):
+        """
+        Return the angular scales as multiples of the beam
+        used for multiscale clean for an interferometric configuration.
+        """
+
+        if config is None:
             return None
 
-        return this_dict['clean_scales_arcsec']
+        clean_scales_beam = self._config_dict.get("interf_config", {}).get(config, {}).get("clean_scales_beam", [])
+
+        return clean_scales_beam
+
+    def get_clean_scales_auto_for_config(
+            self,
+            config=None,
+    ):
+        """
+        Return whether we are automatically setting clean
+        scales for multiscale clean for an interferometric configuration.
+        """
+
+        if config is None:
+            return False
+
+        clean_scales_auto = (
+            self._config_dict.get("interf_config", {})
+            .get(config, {})
+            .get("clean_scales_auto", False)
+        )
+
+        return clean_scales_auto
+
+    def get_clean_scales_auto_factor_for_config(
+        self,
+        config=None,
+    ):
+        """
+        Return the multiplicative factor for automatic clean scale
+        """
+
+        if config is None:
+            return None
+
+        clean_scales_auto_factor = (
+            self._config_dict.get("interf_config", {})
+            .get(config, {})
+            .get("clean_scales_auto_factor", 2)
+        )
+
+        # If we have a value less than 1, then we won't converge
+        if clean_scales_auto_factor <= 1:
+            logger.warning("clean_scales_auto_factor should not be smaller than 1. Will set to 1.1")
+            clean_scales_auto_factor = 1.1
+
+        return clean_scales_auto_factor
+
+    def get_clean_scales_max_las_fraction_for_config(
+        self,
+        config=None,
+    ):
+        """
+        Return the maximum fraction of the LAS for automatic clean scale
+        """
+
+        if config is None:
+            return None
+
+        clean_scales_max_las_fraction = (
+            self._config_dict.get("interf_config", {})
+            .get(config, {})
+            .get("clean_scales_max_las_fraction", 1)
+        )
+
+        if clean_scales_max_las_fraction > 1:
+            logger.warning("clean_scales_max_las_fraction should not be larger than 1. Will set to 1")
+            clean_scales_max_las_fraction = 1
+
+        return clean_scales_max_las_fraction
 
     def get_ang_res_dict(self, config=None, product=None,
                          ):
@@ -2789,7 +2878,7 @@ class KeyHandler:
 
         if product not in self._derived_dict[config].keys():
             return {}
-        
+
         if kwarg_type not in self._derived_dict[config][product].keys():
             return {}
 
@@ -2893,10 +2982,33 @@ class KeyHandler:
             logger.info("... " + this_config)
             this_arrays = self._config_dict['interf_config'][this_config]['array_tags']
             this_other_config = self._config_dict['interf_config'][this_config]['feather_config']
-            scales_for_clean = self._config_dict['interf_config'][this_config]['clean_scales_arcsec']
+
+            # Get out various clean scales
+            scales_for_clean_arcsec = self.get_clean_scales_arcsec_for_config(this_config)
+            if scales_for_clean_arcsec is None:
+                scales_for_clean_arcsec = []
+
+            scales_for_clean_beam = self.get_clean_scales_beam_for_config(this_config)
+            if scales_for_clean_beam is None:
+                scales_for_clean_beam = []
+
+            scales_for_clean_auto = self.get_clean_scales_auto_for_config(this_config)
+
             logger.info("... ... includes arrays " + str(this_arrays))
             logger.info("... ... maps to feather config " + str(this_other_config))
-            logger.info("... ... clean these scales in arcsec " + str(scales_for_clean))
+
+            if scales_for_clean_auto:
+                logger.info("... ... automatically set clean scales")
+            else:
+
+                # Crash out if we don't have any clean scales defined
+                if len(scales_for_clean_beam) + len(scales_for_clean_arcsec) == 0:
+                    raise ValueError("At least one of clean_scales_arcsec, clean_scales_beam must be defined")
+
+                if len(scales_for_clean_arcsec) > 0:
+                    logger.info("... ... clean these scales in arcsec: " + str(scales_for_clean_arcsec))
+                if len(scales_for_clean_beam) > 0:
+                    logger.info("... ... clean these scales as multiples of the beam: " + str(scales_for_clean_beam))
 
         if 'feather_config' in self._config_dict:
             logger.info("Feather Configurations")

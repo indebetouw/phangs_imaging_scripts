@@ -1,7 +1,6 @@
 [project]
 
 name = "phangsPipeline"
-# version = "4.0.0"
 dynamic = ["version"]
 description = "PHANGS-ALMA Pipeline"
 readme = "README.md"
@@ -37,11 +36,15 @@ classifiers = [
 dependencies = [
     "astropy >= 7.2.0",
     "astroquery >= 0.4.11",
+    "matplotlib >= 3.10.9",
     "numpy >= 2.3.5",
     "protobuf == 3.20",
     "pytz >= 2025.2",
+    "radio-beam >= 0.3.9",
+    "reproject >= 0.21.0",
     "scipy >= 1.16.3",
     "spectral-cube >= 0.6.7",
+    "uvcombine@git+https://github.com/radio-astro-tools/uvcombine.git",
 ]
 
 # Optional packages for CASA
@@ -50,9 +53,9 @@ casa = [
     "casadata >= 2025.9.22",
     "casaplotms >= 2.8.2",
     "casarecipes >= 0.4.0",
-    "casashell >= 6.7.3.21",
-    "casatasks >= 6.7.3.21",
-    "casatools >= 6.7.3.21",
+    "casashell >= 6.7.3.21, < 6.7.6.14",
+    "casatasks >= 6.7.3.21, < 6.7.6.14",
+    "casatools >= 6.7.3.21, < 6.7.6.14",
     "casaviewer >= 2.4.4 ; platform_system != 'Darwin'",
     "pipeline@git+https://open-bitbucket.nrao.edu/scm/pipe/pipeline.git",
 ]
@@ -66,6 +69,14 @@ test-casa = [
 ]
 test-ruff = [
     "ruff >= 0.15.10",
+]
+
+# Optional packages for documentation
+docs = [
+    "myst-parser >= 5.1.0",
+    "sphinx >= 9.1.0",
+    "sphinx-automodapi >= 0.22.0",
+    "sphinx-rtd-theme >= 3.1.0",
 ]
 
 [project.urls]

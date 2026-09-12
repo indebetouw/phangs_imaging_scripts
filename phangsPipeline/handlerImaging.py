@@ -70,9 +70,6 @@ if casa_enabled:
     from .utilsSingleDish import get_dish_diameter, prepare_sd_image, move_sd_psf
 
     class ImagingHandler(handlerTemplate.HandlerTemplate):
-        """
-        Class to makes image cubes out of uv data from each spectral line and continuum of each galaxy.
-        """
 
         ############
         # __init__ #
@@ -83,6 +80,9 @@ if casa_enabled:
             key_handler = None,
             dry_run = False,
             ):
+            """
+            Class to makes image cubes out of uv data from each spectral line and continuum of each galaxy.
+            """
 
             # inherit template class
             handlerTemplate.HandlerTemplate.__init__(self,key_handler = key_handler, dry_run = dry_run)
@@ -156,35 +156,35 @@ if casa_enabled:
         ################
 
         def loop_imaging(
-                self,
-                do_all=False,
-                imaging_method='tclean',
-                imaging_method_override=None,
-                do_dirty_image=False,
-                do_revert_to_dirty=False,
-                do_read_clean_mask=False,
-                do_multiscale_clean=False,
-                do_revert_to_multiscale=False,
-                do_singlescale_mask=False,
-                singlescale_mask_high_snr=None,
-                singlescale_mask_low_snr=None,
-                singlescale_mask_absolute=False,
-                do_singlescale_clean=False,
-                do_revert_to_singlescale=False,
-                do_export_to_fits=False,
-                convergence_fracflux=0.01,
-                convergence_noise_z_threshold=None,
-                singlescale_threshold_value=1.0,
-                extra_ext_in=None,
-                suffix_in=None,
-                extra_ext_out=None,
-                recipe='phangsalma',
-                make_directories=True,
-                dynamic_sizing=True,
-                force_square=False,
-                export_dirty=False,
-                export_multiscale=False,
-                overwrite=False,
+            self,
+            do_all=False,
+            imaging_method='tclean',
+            imaging_method_override=None,
+            do_dirty_image=False,
+            do_revert_to_dirty=False,
+            do_read_clean_mask=False,
+            do_multiscale_clean=False,
+            do_revert_to_multiscale=False,
+            do_singlescale_mask=False,
+            singlescale_mask_high_snr=None,
+            singlescale_mask_low_snr=None,
+            singlescale_mask_absolute=False,
+            do_singlescale_clean=False,
+            do_revert_to_singlescale=False,
+            do_export_to_fits=False,
+            convergence_fracflux=0.01,
+            convergence_noise_z_threshold=None,
+            singlescale_threshold_value=1.0,
+            extra_ext_in=None,
+            suffix_in=None,
+            extra_ext_out=None,
+            recipe='phangsalma',
+            make_directories=True,
+            dynamic_sizing=True,
+            force_square=False,
+            export_dirty=False,
+            export_multiscale=False,
+            overwrite=False,
         ):
             """
             Loops over the full set of targets, products, and
@@ -194,6 +194,7 @@ if casa_enabled:
 
             The clean convergence is set by the convergence_fracflux and
             convergence_noise_z_threshold parameters.
+
             - convergence_fracflux is the fractional flux threshold between imaging loops.
                 Convergence is reached when the fractional flux change is less than this value.
             - convergence_noise_z_threshold is the noise threshold in z-scores.
@@ -677,18 +678,25 @@ if casa_enabled:
                 self,
                 clean_call=None,
                 config=None,
+                imaging_method : str='tclean',
         ):
             """
             Look up the appropriate scales for multi-scale clean
             associated with this config.
+
+            Args:
+                imaging_method (str, optional): Either 'tclean'
+                    or 'sdintimaging'. Defaults to 'tclean'.
             """
 
             if clean_call is None:
                 logger.warning("Require a clean_call object. Returning.")
                 return ()
 
-            scales_to_clean = self._kh.get_clean_scales_for_config(config=config)
-            clean_call.set_multiscale_arcsec(scales=scales_to_clean)
+            clean_call.set_multiscale_clean_scales(key_handler=self._kh,
+                                                   config=config,
+                                                   imaging_method=imaging_method,
+                                                   )
 
             return ()
 
@@ -816,10 +824,17 @@ if casa_enabled:
                                           imaging_method=imaging_method)
 
             # import_and_align_mask
-            msr.import_and_align_mask(in_file=this_cleanmask,
-                                      out_file=fname_dict['mask'],
-                                      template=fname_dict['image'],
-                                      blank_to_match=True)
+            if imaging_method == 'tclean':
+                msr.import_and_align_mask(in_file=this_cleanmask,
+                                          out_file=fname_dict['mask'],
+                                          template=fname_dict['image'],
+                                          blank_to_match=True)
+            elif imaging_method == 'sdintimaging':
+                template_name = fname_dict['image'].replace('.joint.', '.sd.')
+                msr.import_and_align_mask(in_file=this_cleanmask,
+                                          out_file=fname_dict['mask'],
+                                          template=template_name,
+                                          blank_to_match=True)
             # AKL - propose to deprecate
             # clean_call.set_param('usemask','user')
 
@@ -1318,7 +1333,10 @@ if casa_enabled:
 
             # Look up the angular scales to clean for this config
 
-            self.task_assign_multiscales(config=config, clean_call=clean_call)
+            self.task_assign_multiscales(config=config,
+                                         clean_call=clean_call,
+                                         imaging_method=imaging_method,
+                                         )
 
             # Run a multiscale clean until it converges.
 

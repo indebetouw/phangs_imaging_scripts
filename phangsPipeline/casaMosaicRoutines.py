@@ -219,8 +219,6 @@ def calculate_mosaic_extent(
     # Loop over input files and calculate RA and Dec coordinates of
     # the corners.
 
-    myia = au.createCasaTool(casaStuff.iatool)
-
     for this_infile in infile_list:
 
         this_hdr = casaStuff.imhead(this_infile)
@@ -266,10 +264,10 @@ def calculate_mosaic_extent(
         dec_list.append(trc['coords'][:, 1])
         dec_list.append(brc['coords'][:, 1])
 
-        freq_list.append(blc['coords'][:, 2])
-        freq_list.append(tlc['coords'][:, 2])
-        freq_list.append(trc['coords'][:, 2])
-        freq_list.append(brc['coords'][:, 2])
+        freq_list.append(blc['coords'][:, -1])
+        freq_list.append(tlc['coords'][:, -1])
+        freq_list.append(trc['coords'][:, -1])
+        freq_list.append(brc['coords'][:, -1])
 
     # Get the minimum and maximum RA and Declination.
 
@@ -439,6 +437,11 @@ def build_common_header(
 
     target_hdr = casaStuff.imregrid(template_file, template='get')
 
+    # Get out the spectral key, which can change
+    spec_key = 'spectral2'
+    if spec_key not in target_hdr['csys']:
+        spec_key = 'spectral1'
+
     # Get the pixel scale. This makes some assumptions. We could put a
     # lot of general logic here, but we are usually working in a
     # case where this works.
@@ -457,7 +460,7 @@ def build_common_header(
 
     target_hdr['csys']['direction0']['crval'][0] = ra_ctr_in_rad
     target_hdr['csys']['direction0']['crval'][1] = dec_ctr_in_rad
-    target_hdr['csys']['spectral1']['wcs']['crval'] = freq_ctr
+    target_hdr['csys'][spec_key]['wcs']['crval'] = freq_ctr
 
     # Calculate the size of the image in pixels and set the central
     # pixel coordinate for the RA and Dec axis.
@@ -470,7 +473,7 @@ def build_common_header(
     dec_axis_size = np.ceil(delta_dec / dec_pix_in_as) + 1
     new_dec_ctr_pix = (dec_axis_size + 1)/2.0
 
-    freq_pix_in_hz = np.abs(target_hdr['csys']['spectral1']['wcs']['cdelt'])
+    freq_pix_in_hz = np.abs(target_hdr['csys'][spec_key]['wcs']['cdelt'])
     freq_axis_size = np.ceil(delta_freq / freq_pix_in_hz) + 1
     # +1 or the 1-indexing
     new_freq_ctr_pix = (freq_axis_size + 1) / 2.0
@@ -490,11 +493,12 @@ def build_common_header(
 
     target_hdr['csys']['direction0']['crpix'][0] = new_ra_ctr_pix
     target_hdr['csys']['direction0']['crpix'][1] = new_dec_ctr_pix
-    target_hdr['csys']['spectral1']['wcs']['crpix'] = new_freq_ctr_pix
+    target_hdr['csys'][spec_key]['wcs']['crpix'] = new_freq_ctr_pix
 
     target_hdr['shap'][0] = int(ra_axis_size)
     target_hdr['shap'][1] = int(dec_axis_size)
-    target_hdr['shap'][2] = int(freq_axis_size)
+    target_hdr['shap'][-1] = int(freq_axis_size)
+
     return(target_hdr)
 
 def common_grid_for_mosaic(
@@ -1130,6 +1134,8 @@ def mosaic_aligned_data(
     local_outfile = os.path.basename(outfile)
     local_maskfile = os.path.basename(mask_file)
 
+    ndim = len(cube_shape)
+
     if not has_memory_issue:
         # Original approach for smaller cubes
         casaStuff.immath(imagename = local_imlist, mode='evalexpr',
@@ -1153,8 +1159,6 @@ def mosaic_aligned_data(
         myia_weight = au.createCasaTool(casaStuff.iatool)
         myia_sum.open(sum_file)
         myia_weight.open(weight_file)
-        
-        ndim = len(cube_shape)
         
         try:
             if ndim == 3:
@@ -1203,11 +1207,21 @@ def mosaic_aligned_data(
                         os.system('rm -rf ' + temp)
                         
             elif ndim == 4:
-                nstokes = cube_shape[3]
-                nchan = cube_shape[2]
+
+                # The spectral/Stokes axis may be flipped. Keep track of this
+                csys_tmp = myia_sum.coordsys()
+                specaxis = csys_tmp.axiscoordinatetypes().index('Spectral')
+                stokesaxis = csys_tmp.axiscoordinatetypes().index('Stokes')
+                stokes_labels = csys_tmp.stokes()
+                csys_tmp.done()
+
+                nchan = cube_shape[specaxis]
+                nstokes = cube_shape[stokesaxis]
+                blc = [0, 0, 0, 0]
+
                 total = nstokes * nchan
                 logger.info(f'Processing {nstokes} Stokes x {nchan} channels = {total} planes')
-                
+
                 counter = 0
                 for istokes in range(nstokes):
                     for ichan in range(nchan):
@@ -1215,15 +1229,20 @@ def mosaic_aligned_data(
                         if counter % 10 == 0:
                             logger.info(f'Processing plane {counter}/{total}')
                         
-                        blc = [0, 0, ichan, istokes]
+                        blc[specaxis] = ichan
+                        blc[stokesaxis] = istokes
                         
                         # Extract channel/stokes slices
                         temp_chan_images = []
                         for idx, im in enumerate(local_imlist):
                             temp_chan = f'temp_ch{ichan}_st{istokes}_img{idx}'
-                            casaStuff.imsubimage(imagename=im, outfile=temp_chan,
-                                               chans=str(ichan), stokes=str(istokes), 
-                                               dropdeg=False)
+                            casaStuff.imsubimage(
+                                imagename=im,
+                                outfile=temp_chan,
+                                chans=str(ichan),
+                                stokes=stokes_labels[istokes],
+                                dropdeg=False,
+                            )
                             temp_chan_images.append(temp_chan)
                         
                         # Process sum
@@ -1319,10 +1338,30 @@ def mosaic_aligned_data(
                     myia_mask.putchunk(mask_slice, blc)
                     
             elif ndim == 4:
+
+                # The spectral/Stokes axis may be flipped. Keep track of this
+                myia_sum.open(sum_file)
+                csys_tmp = myia_sum.coordsys()
+                specaxis = csys_tmp.axiscoordinatetypes().index('Spectral')
+                stokesaxis = csys_tmp.axiscoordinatetypes().index('Stokes')
+                csys_tmp.done()
+
+                myia_sum.close()
+
+                nchan = cube_shape[specaxis]
+                nstokes = cube_shape[stokesaxis]
+
+                blc = [0, 0, 0, 0]
+                trc = [cube_shape[0]-1, cube_shape[1]-1, 0, 0]
+
                 for istokes in range(nstokes):
                     for ichan in range(nchan):
-                        blc = [0, 0, ichan, istokes]
-                        trc = [cube_shape[0]-1, cube_shape[1]-1, ichan, istokes]
+
+                        blc[specaxis] = ichan
+                        blc[stokesaxis] = istokes
+
+                        trc[specaxis] = ichan
+                        trc[stokesaxis] = istokes
                         
                         myia_sum.open(sum_file)
                         sum_slice = myia_sum.getchunk(blc, trc)
@@ -1352,13 +1391,12 @@ def mosaic_aligned_data(
         cur_maskfile = copy.deepcopy(local_maskfile)
     myia.close()
 
-    # Strip out any degenerate axes and create the final output file.
-
+    # Create the final output file.
     casaStuff.imsubimage(imagename=temp_file,
                          outfile=local_outfile,
                          mask='"'+cur_maskfile+'"',
                          overwrite=overwrite,
-                         dropdeg=True,
+                         dropdeg=False,
                          )
 
     # Remove any temp Stokes files we've made along the way
