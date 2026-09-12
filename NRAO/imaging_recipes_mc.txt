@@ -54,7 +54,7 @@
 #
 #all      c18o21      all           cube_mosaic.clean
 #
-#all      13co21      all           cube_mosaic.clean
+all      13co21      all           cube_mosaic.clean
 #
 #all      cont        all           continuum_mosaic.clean
 

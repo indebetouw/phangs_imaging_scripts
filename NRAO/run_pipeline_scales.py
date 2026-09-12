@@ -18,9 +18,9 @@ master_key_file = "/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts
 
 # Steps to run
 do_singledish = False
-do_staging = False
+do_staging = True
 do_imaging = False
-do_postprocess = True
+do_postprocess = False
 do_derived = False
 do_release = False
 
@@ -31,7 +31,7 @@ targets = [
     ]
 
 line_products = [
-    "co21",
+    "13co21",
 ]
 interf_configs = [
     "12m+7m",

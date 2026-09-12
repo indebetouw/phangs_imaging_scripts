@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --account=rindebet
 #SBATCH --time=24:00:00
-#SBATCH --job-name=m83_5_13CO
-#SBATCH --output=m83_5_13CO_%A_%a.out
-#SBATCH --error=m83_5_13CO_%A_%a.err
+#SBATCH --job-name=m83_6_noT2
+#SBATCH --output=m83_6_noT2_%A_%a.out
+#SBATCH --error=m83_6_noT2_%A_%a.err
 #SBATCH --ntasks=8      # number of MPI processes
 #SBATCH --mem=254G      # memory; default unit is megabytes; was 32G/core
 #SBATCH --cpus-per-task=1

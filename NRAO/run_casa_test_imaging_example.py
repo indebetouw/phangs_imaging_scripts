@@ -96,8 +96,10 @@ this_kh.make_missing_directories(imaging=True, derived=True, postprocess=True, r
 # image the CO 2-1 line from these, and then postprocess the CO 2-1
 # cubes.
 
+target='ngc5236_6'
+
 #this_uvh.set_targets(only=['ngc5236_5A1'])
-this_uvh.set_targets(only=['ngc5236_5'])
+this_uvh.set_targets(only=[target])
 this_uvh.set_interf_configs(only=['12m+7m'])
 this_uvh.set_line_products(only=['co21'])
 this_uvh.set_no_cont_products(True)
@@ -165,7 +167,7 @@ if do_imaging_tests:
     this_tih = tih.TestImagingHandler(key_handler = this_kh)
 
     #this_tih.set_targets(only=['ngc5236_5A1'])
-    this_tih.set_targets(only=['ngc5236_5'])
+    this_tih.set_targets(only=[target])
     this_tih.set_interf_configs(only=['12m+7m'])
     this_tih.set_line_products(only=['co21'])
     this_tih.set_no_cont_products(True)

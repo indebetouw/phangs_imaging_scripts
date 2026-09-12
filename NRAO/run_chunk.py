@@ -24,7 +24,7 @@ sdir = '/lustre/cv/users/rindebet/local/github/phangs_imaging_scripts/'
 key_file = sdir+'NRAO/master_key_sscales.txt'
 sys.path.append(os.path.expanduser(sdir))
 sys.path.append(os.path.expanduser("/home/casa/contrib/bitbucket/AIV/analysis_scripts/"))
-chunksize = 10
+chunksize = 40
 
 
 # Pass the target name from the cmd line
