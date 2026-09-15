@@ -2771,7 +2771,7 @@ class KeyHandler:
         clean_scales_auto_factor = (
             self._config_dict.get("interf_config", {})
             .get(config, {})
-            .get("clean_scales_auto_factor", 2)
+            .get("clean_scales_auto_factor", 3)
         )
 
         # If we have a value less than 1, then we won't converge
@@ -2795,7 +2795,7 @@ class KeyHandler:
         clean_scales_max_las_fraction = (
             self._config_dict.get("interf_config", {})
             .get(config, {})
-            .get("clean_scales_max_las_fraction", 1)
+            .get("clean_scales_max_las_fraction", 0.5)
         )
 
         if clean_scales_max_las_fraction > 1:

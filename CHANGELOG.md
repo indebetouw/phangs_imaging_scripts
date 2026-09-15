@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add tests for scMoments, and tidy up formatting (#389).
 - Speed up sdintimaging by replacing feather with custom uvcombine tasks (#376).
 - Add tests for utilsResolutions, and tidy up formatting (#390).
+- Improved convolution with spectral-cube, including new analytic support for small kernels (#385).
 
 ### Changed
 
@@ -32,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - If we don't have any model flux, then overwrite minimum number of major cycles (#359).
 - Keep all 4 axes throughout postprocessing, to avoid slowdowns with re-adding degenerate axes (#353).
 - Speed up sdintimaging by removing unneeded repeated slow operations (#376).
+- Replaced analysisUtils MRS calculation with bespoke version, that accounts properly for concatenated observations (#393).
+- Updated default values for setting automatic multiscales (#393).
+- Use spectral-cube common beam calculations for common beams (#385).
 
 ### Fixed
 
@@ -52,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed typing on key import (#380).
 - Skip the feather-config mosaic pass when nothing was feathered (#383).
 - Fixed a wrong key name in the singledish pipeline (#384).
+- Fix crashes in suggest_extraction_scheme for cont extraction (#352).
 
 ### Dependencies
 - Bump actions/upload-artifact from 6 to 7 (#313).
