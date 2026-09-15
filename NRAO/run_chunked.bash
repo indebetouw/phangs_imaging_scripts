@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=rindebet
-#SBATCH --time=24:00:00
+#SBATCH --time=48:00:00
 #SBATCH --job-name=phangs_chunk
 #SBATCH --output=%x_%A_%a.out
 #SBATCH --error=%x_%A_%a.err
@@ -62,6 +62,46 @@ assembled_products_exist() {
     return 0
 }
 
+postprocessed_derived_input_exists() {
+    local target_name="$1"
+    local product_name="$2"
+    local config_name="12m+7m"
+    local master_key="${script_dir}/master_key_sscales.txt"
+    local dir_key="${script_dir}/dir_key.txt"
+    local postprocess_root
+    local target_dir
+    local postprocess_dir
+    local cube_root
+    local cube_path
+
+    if [[ ! -f "$master_key" ]]; then
+        return 1
+    fi
+
+    postprocess_root=$(awk '$1=="postprocess_root" {print $2; exit}' "$master_key")
+    if [[ -z "$postprocess_root" ]]; then
+        return 1
+    fi
+
+    if [[ -f "$dir_key" ]]; then
+        target_dir=$(awk -v tgt="$target_name" '$1==tgt && $1 !~ /^#/ {print $2; exit}' "$dir_key")
+    fi
+    if [[ -z "$target_dir" ]]; then
+        target_dir="$target_name"
+    fi
+
+    postprocess_dir="${postprocess_root%/}/${target_dir}"
+    cube_root="${target_name}_${config_name}_${product_name}"
+    cube_path="${postprocess_dir}/${cube_root}_pbcorr_trimmed_k.fits"
+
+    if [[ -f "$cube_path" ]]; then
+        return 0
+    fi
+
+    echo "Missing postprocessed derived input: $cube_path" >&2
+    return 1
+}
+
 
 # Read target/product from CLI and submit with dynamic job naming when run
 # outside of an allocated Slurm job.
@@ -76,17 +116,26 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
 	job_tag="${target_cli}_${product_cli}"
 	shift 2
 	sbatch_opts=("$@")
-    skip_imaging=false
-
-    if assembled_products_exist "${target_cli}" "${product_cli}"; then
-        echo "Final assembled products already exist for ${job_tag}; skipping I and AP submissions."
-        skip_imaging=true
+    # The assembly stage requires the final assembled image/cube products.
+    # The postprocess stage requires the final assembled cube and creates the
+    # pbcorr_trimmed_k input that the derived stage consumes.
+    if postprocessed_derived_input_exists "${target_cli}" "${product_cli}"; then
+        echo "Final postprocessed product already exists for ${job_tag}; skipping S, I, A, and P submissions."
+        export stagestring='D'
+        DERIVED_ID=$(sbatch --parsable --ntasks=1 --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}")
+        echo "Submitted Derived job '${job_tag}' ${DERIVED_ID}"
+        exit $?
     fi
 
-    if [[ "$skip_imaging" == "true" ]]; then
-        echo "Skipping S, I, and AP for ${job_tag}. Submitting D with no dependencies."
+    if assembled_products_exist "${target_cli}" "${product_cli}"; then
+        echo "Final assembled products already exist for ${job_tag}; skipping S, I, and A submissions."
+        export stagestring='P'
+        POST_ID=$(sbatch --parsable --ntasks=1 --job-name="${job_tag}_post" "$0" "${target_cli}" "${product_cli}")
+        echo "Submitted Postprocess job '${job_tag}_post' ${POST_ID}"
+
         export stagestring='D'
-        sbatch --parsable --ntasks=1 --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}"
+        DERIVED_ID=$(sbatch --parsable --dependency=afterok:${POST_ID} --ntasks=1 --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}")
+        echo "Submitted Derived job '${job_tag}' ${DERIVED_ID}"
         exit $?
     fi
 
@@ -97,22 +146,24 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     # P = postprocess
     # D = derived
     export stagestring='S'
-    echo "Submitting Stage job '${job_tag}_stage'"
     STAGE_ID=$(sbatch --parsable --ntasks=1 --job-name="${job_tag}_stage" "$0" "${target_cli}" "${product_cli}")
+    echo "Submitted Stage job '${job_tag}_stage' ${STAGE_ID}"
 
     export stagestring='I'
-	echo "Submitting Imaging job '${job_tag}'"
-	ARRAY_ID=$(sbatch --parsable --dependency=afterok:${STAGE_ID} "${sbatch_opts[@]}" --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}")
+    ARRAY_ID=$(sbatch --parsable --dependency=afterok:${STAGE_ID} "${sbatch_opts[@]}" --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}")
+    echo "Submitted Imaging job '${job_tag}' ${ARRAY_ID}"
 
-    export stagestring='AP'
-    echo "Submitting Assemble job '${job_tag}'"
-    AP_ID=$(sbatch --parsable --dependency=afterok:${ARRAY_ID} --ntasks=1 --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}")
-    # for post-processing previously imaged data - comment out the imaging above and run this:
-    #sbatch --parsable --ntasks=1 --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}"
+    export stagestring='A'
+    ASSEMBLY_ID=$(sbatch --parsable --dependency=afterok:${ARRAY_ID} --ntasks=1 --job-name="${job_tag}_assemble" "$0" "${target_cli}" "${product_cli}")
+    echo "Submitted Assembly job '${job_tag}_assemble' ${ASSEMBLY_ID}"
+
+    export stagestring='P'
+    POST_ID=$(sbatch --parsable --dependency=afterok:${ASSEMBLY_ID} --ntasks=1 --job-name="${job_tag}_post" "$0" "${target_cli}" "${product_cli}")
+    echo "Submitted Postprocess job '${job_tag}_post' ${POST_ID}"
 
     export stagestring='D'
-    echo "Submitting Derived job '${job_tag}'"
-    sbatch --parsable --dependency=afterok:${AP_ID} --ntasks=1 --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}"
+    DERIVED_ID=$(sbatch --parsable --dependency=afterok:${POST_ID} --ntasks=1 --job-name="${job_tag}" "$0" "${target_cli}" "${product_cli}")
+    echo "Submitted Derived job '${job_tag}' ${DERIVED_ID}"
 
 
 	exit $?
