@@ -25,4 +25,4 @@
 # - {name: vfield_file, datatype: string}
 # delimiter: ','
 # schema: astropy-2.0
-target,window,vfield_file
+# target,window,vfield_file

@@ -215,8 +215,21 @@ if do_imaging:
     if chunk_num >= this_imh.nchunks:
         raise ValueError(f"Chunk number {chunk_num} is greater than the number of chunks {this_imh.nchunks}")
 
-    print(f"Chunk {chunk_num} of {this_imh.nchunks}")
-    this_imh.run_imaging(do_all=True, chunk_num=chunk_num)
+    chunk_image_root = this_imh.chunk_params[chunk_num]['full_imagename']
+    if imaging_method == "sdintimaging":
+        expected_chunk_image = f"{chunk_image_root}.joint.cube.image"
+    elif imaging_method == "tclean":
+        expected_chunk_image = f"{chunk_image_root}.image"
+    else:
+        raise ValueError(f"Unsupported imaging_method for skip guard: {imaging_method}")
+
+    if os.path.exists(expected_chunk_image):
+        existing_image = expected_chunk_image
+        print(f"Chunk {chunk_num} already imaged: {existing_image}")
+        print("Skipping imaging for this chunk.")
+    else:
+        print(f"Chunk {chunk_num} of {this_imh.nchunks}")
+        this_imh.run_imaging(do_all=True, chunk_num=chunk_num)
 
 if do_assemble:
     this_imh = ImagingChunkedHandler(target, config, product, this_kh,
@@ -234,8 +247,8 @@ if do_assemble:
 # units, and some downsampling to save space.
 
 if do_postprocess:
-    this_pph.loop_postprocess(do_prep=True, do_feather=True,
-                              do_mosaic=True, do_cleanup=True)
+    this_pph.loop_postprocess(do_prep=True, do_feather=False,
+                              do_mosaic=True, do_cleanup=True, postprocessing_method="spectralcube")
 
 if do_derived:
     import astropy
@@ -258,7 +271,7 @@ if do_derived:
     if do_convolve:
         this_der.loop_derive_products(do_convolve=True, do_noise=False,
                                     do_strictmask=False, do_broadmask=False,
-                                    do_moments=False, do_secondary=False)
+                                    do_moments=False, do_secondary=False) # postprocessing_method="spectralcube" ?
 
     # Estimate the noise from the signal-free regions of the data to
     # produce a three-dimensional noise model for each cube.

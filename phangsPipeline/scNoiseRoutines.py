@@ -451,6 +451,7 @@ def recipe_phangs_noise(
     if type(incube) is SpectralCube:
         cube = incube
     elif type(incube) == str:
+        logger.info(f'Loading {incube} for noise calculation.')
         cube = SpectralCube.read(incube)
     else:
         logger.error("Input must be a SpectralCube object or a filename.")
@@ -508,6 +509,7 @@ def recipe_phangs_noise(
     # Run the noise estimate
     # &%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%&%
 
+    logger.info('Starting binary dilation for noise calculation.')
     data = cube.filled_data[:].value
     badmask = np.isnan(data)
     badmask = nd.binary_dilation(badmask,

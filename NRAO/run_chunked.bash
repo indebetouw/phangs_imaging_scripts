@@ -204,5 +204,5 @@ stage_mode="${stage_mode//[[:space:]]/}"
 if [[ "$stage_mode" == "I" ]]; then
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 mpirun --mca btl_vader_single_copy_mechanism none -x OMP_NUM_THREADS -x OPENBLAS_NUM_THREADS -n 4 python ${code_dir}/run_chunk.py $target $config $product $stagestring $SLURM_ARRAY_TASK_ID
 else
-    OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python ${code_dir}/run_chunk.py $target $config $product $stagestring $SLURM_ARRAY_TASK_ID    
+    OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TMPDIR=/lustre/cv/users/rindebet/tmp python ${code_dir}/run_chunk.py $target $config $product $stagestring $SLURM_ARRAY_TASK_ID    
 fi
