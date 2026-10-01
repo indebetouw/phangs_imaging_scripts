@@ -15,7 +15,6 @@ from . import casaStuff
 from .clean_call import CleanCall
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 # endregion
@@ -152,17 +151,44 @@ def wipe_imaging(
 
     logger.debug('wipe_imaging under "' + os.getcwd() + '"')
 
-    exts = ['image', 'model', 'residual', 'mask', 'pb', 'psf', 'weight', 'sumwt',
-            'alpha', 'alpha.error',
-            'beta', 'beta.error',
-            'image.tt0', 'image.tt1', 'image.tt2',
-            'model.tt0', 'model.tt1', 'model.tt2',
-            'residual.tt0', 'residual.tt1', 'residual.tt2',
-            'mask.tt0', 'mask.tt1', 'mask.tt2',
-            'pb.tt0', 'pb.tt1', 'pb.tt2',
-            'psf.tt0', 'psf.tt1', 'psf.tt2',
-            'weight.tt0', 'weight.tt1', 'weight.tt2',
-            'sumwt.tt0', 'sumwt.tt1', 'sumwt.tt2']
+    exts = [
+        'image',
+        'model',
+        'residual',
+        'mask',
+        'pb',
+        'psf',
+        'weight',
+        'sumwt',
+        'alpha',
+        'alpha.error',
+        'beta',
+        'beta.error',
+        'image.tt0',
+        'image.tt1',
+        'image.tt2',
+        'model.tt0',
+        'model.tt1',
+        'model.tt2',
+        'residual.tt0',
+        'residual.tt1',
+        'residual.tt2',
+        'mask.tt0',
+        'mask.tt1',
+        'mask.tt2',
+        'pb.tt0',
+        'pb.tt1',
+        'pb.tt2',
+        'psf.tt0',
+        'psf.tt1',
+        'psf.tt2',
+        'weight.tt0',
+        'weight.tt1',
+        'weight.tt2',
+        'sumwt.tt0',
+        'sumwt.tt1',
+        'sumwt.tt2',
+    ]
 
     if imaging_method == 'tclean':
         cmd_list = ['rm -rf {0}.{1}'.format(image_root, ext) for ext in exts]
@@ -197,17 +223,44 @@ def copy_imaging(
 
     logger.debug('Copying imaging from root ' + input_root + ' to root ' + output_root)
 
-    exts = ['image', 'model', 'residual', 'mask', 'pb', 'psf', 'weight', 'sumwt',
-            'alpha', 'alpha.error',
-            'beta', 'beta.error',
-            'image.tt0', 'image.tt1', 'image.tt2',
-            'model.tt0', 'model.tt1', 'model.tt2',
-            'residual.tt0', 'residual.tt1', 'residual.tt2',
-            'mask.tt0', 'mask.tt1', 'mask.tt2',
-            'pb.tt0', 'pb.tt1', 'pb.tt2',
-            'psf.tt0', 'psf.tt1', 'psf.tt2',
-            'weight.tt0', 'weight.tt1', 'weight.tt2',
-            'sumwt.tt0', 'sumwt.tt1', 'sumwt.tt2']
+    exts = [
+        'image',
+        'model',
+        'residual',
+        'mask',
+        'pb',
+        'psf',
+        'weight',
+        'sumwt',
+        'alpha',
+        'alpha.error',
+        'beta',
+        'beta.error',
+        'image.tt0',
+        'image.tt1',
+        'image.tt2',
+        'model.tt0',
+        'model.tt1',
+        'model.tt2',
+        'residual.tt0',
+        'residual.tt1',
+        'residual.tt2',
+        'mask.tt0',
+        'mask.tt1',
+        'mask.tt2',
+        'pb.tt0',
+        'pb.tt1',
+        'pb.tt2',
+        'psf.tt0',
+        'psf.tt1',
+        'psf.tt2',
+        'weight.tt0',
+        'weight.tt1',
+        'weight.tt2',
+        'sumwt.tt0',
+        'sumwt.tt1',
+        'sumwt.tt2',
+    ]
 
     if imaging_method == 'tclean':
         cmd_list = ['cp -r {0}.{1} {2}.{3}'.format(input_root, ext, output_root, ext) for ext in exts]
@@ -230,16 +283,40 @@ def export_imaging_to_fits(
     Export the products associated with a CASA imaging run to FITS.
     """
 
-    exts = ['alpha', 'alpha.error',
-            'beta', 'beta.error',
-            'image.tt0', 'image.tt1', 'image.tt2',
-            'model.tt0', 'model.tt1', 'model.tt2',
-            'residual.tt0', 'residual.tt1', 'residual.tt2',
-            'mask.tt0', 'mask.tt1', 'mask.tt2',
-            'pb.tt0', 'pb.tt1', 'pb.tt2',
-            'psf.tt0', 'psf.tt1', 'psf.tt2',
-            'weight.tt0', 'weight.tt1', 'weight.tt2',
-            'image', 'model', 'residual', 'mask', 'pb', 'psf', 'weight']
+    exts = [
+        'alpha',
+        'alpha.error',
+        'beta',
+        'beta.error',
+        'image.tt0',
+        'image.tt1',
+        'image.tt2',
+        'model.tt0',
+        'model.tt1',
+        'model.tt2',
+        'residual.tt0',
+        'residual.tt1',
+        'residual.tt2',
+        'mask.tt0',
+        'mask.tt1',
+        'mask.tt2',
+        'pb.tt0',
+        'pb.tt1',
+        'pb.tt2',
+        'psf.tt0',
+        'psf.tt1',
+        'psf.tt2',
+        'weight.tt0',
+        'weight.tt1',
+        'weight.tt2',
+        'image',
+        'model',
+        'residual',
+        'mask',
+        'pb',
+        'psf',
+        'weight',
+    ]
 
     ext_map = {}
 
@@ -372,10 +449,24 @@ def execute_clean_call(
         for k in clean_kwargs:
             if not (k in expected_kwargs):
                 unused_kwargs.append(k)
+
+        # If we're sdintimaging, we need to set some more kwargs
         if imaging_method == 'sdintimaging':
-            # Put in the convergence_fracflux criteria, and make sure we don't throw a warning
-            active_kwargs['convergence_fracflux'] = convergence_fracflux
-            missing_kwargs.remove('convergence_fracflux')
+
+            # If we don't have a sdgain set, set it to 1
+            if "sdgain" in missing_kwargs:
+                active_kwargs["sdgain"] = 1
+                missing_kwargs.remove("sdgain")
+
+            # FIXME: These can be removed with the default CASA task
+            if "nmajor" in missing_kwargs:
+                active_kwargs["nmajor"] = -1
+                missing_kwargs.remove("nmajor")
+
+            if "fullsummary" in missing_kwargs:
+                active_kwargs["fullsummary"] = True
+                missing_kwargs.remove("fullsummary")
+
         if len(unused_kwargs) > 0:
             logger.warning('Unused key arguments for ' + imaging_method + ': ' + str(unused_kwargs))
         if len(missing_kwargs) > 0:
@@ -527,20 +618,7 @@ def make_dirty_image(
         raise Exception("Please input a valid clean call!")
 
     dirty_clean_call = copy.deepcopy(clean_call)
-
-    # TODO: Currently sdintimaging doesn't properly produce a dirty image. Hack around this for now with a low
-    #   gain and niter=1
-
-    if imaging_method == 'tclean':
-        dirty_clean_call.set_param('niter', 0)
-    elif imaging_method == 'sdintimaging':
-        dirty_clean_call.set_param('niter', 1)
-        dirty_clean_call.set_param('cycleniter', 1)
-        dirty_clean_call.set_param('gain', 0.001)
-
-        # Make sure we don't have a PSF set, and use hogbom
-        dirty_clean_call.set_param('deconvolver', 'hogbom')
-        dirty_clean_call.set_param('sdpsf', '')
+    dirty_clean_call.set_param('niter', 0)
     dirty_clean_call.set_param('calcres', True)
     dirty_clean_call.set_param('calcpsf', True)
 
@@ -879,6 +957,10 @@ def clean_loop(
         previous_flux = current_flux
         current_flux = model_stats['sum'][0]
 
+        # In some cases, we may want to overwrite forcing a
+        # minimum number of loops
+        force_overwrite_min_loops = False
+
         delta_flux = (current_flux - previous_flux)
         if use_absolute_delta:
             delta_flux = abs(delta_flux)
@@ -889,6 +971,9 @@ def clean_loop(
         # If we don't have any model flux after iter 1, then catch that here
         if np.isnan(frac_delta_flux) and loop > 0:
             frac_delta_flux = 0
+
+            # At this point, doing more loops won't change anything
+            force_overwrite_min_loops = True
 
         # Check whether the model flux convergence criteria is met
 
@@ -907,6 +992,12 @@ def clean_loop(
         if max_total_niter is not None:
             if cumulative_niter >= max_total_niter:
                 proceed = False
+
+        # If there's no change in the flux, then running for more loops
+        # won't do anything
+        if delta_flux == 0:
+            proceed = False
+            force_overwrite_min_loops = True
 
         # If requested, stop if the integrated model flux becomes
         # negative.
@@ -956,12 +1047,15 @@ def clean_loop(
             noise_conv = None
 
         # Enforce minimum and maximum limits on number of loops. These
-        # override other convergence criteria.
+        # override other convergence criteria in most cases.
 
         if loop >= max_loops:
             proceed = False
         if loop < min_loops:
-            proceed = True
+            if force_overwrite_min_loops:
+                proceed = False
+            else:
+                proceed = True
 
         # Generate a record line and print the current status to the screen
 

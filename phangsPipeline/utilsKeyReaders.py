@@ -8,7 +8,6 @@ import os
 import re
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 ##############################################################
@@ -734,13 +733,18 @@ def read_config_key(fname='', existing_dict=None, delim=None):
         if this_type == "interf_config":
             expected_params = {
                 'array_tags': [],
+                'requires': [],
                 'res_min_arcsec': 0.0,
                 'res_max_arcsec': 0.0,
                 'res_min_pc': 0.0,
                 'res_max_pc': 0.0,
                 'res_step_factor': 1.0,
                 'res_list': [],
-                'clean_scales_arcsec': []
+                'clean_scales_arcsec': [],
+                'clean_scales_beam': [],
+                'clean_scales_auto': False,
+                'clean_scales_auto_factor': 2.0,
+                'clean_scales_max_las_fraction': 1.0,
             }
 
         if this_type == "feather_config":

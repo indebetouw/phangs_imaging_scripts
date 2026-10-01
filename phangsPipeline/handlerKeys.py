@@ -3,8 +3,8 @@ Parts of the PHANGS pipeline that handle the targets, data files,
 etc. This is the program that navigates the galaxy list, directory
 structure, etc. This part is pure python.
 """
-
 import ast
+import copy
 import logging
 import os
 
@@ -12,22 +12,30 @@ from . import utilsKeyReaders as key_readers
 from . import utilsLists as list_utils
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 VALID_IMAGING_STAGES = ['dirty', 'multiscale', 'singlescale']
 
 
 class KeyHandler:
-    """
-    Class to handle data files that indicate the names and data sets
-    associated with reducing a large ALMA imaging project.
-    """
 
     def __init__(self,
-                 master_key='key_templates/master_key.txt',
-                 quiet=False,
-                 dochecks=True,
+                 master_key: str = 'key_templates/master_key.txt',
+                 dochecks: bool = True,
                  ):
+        """
+        Class to handle data files that indicate the names and data sets
+        associated with reducing a (generally) ALMA imaging project.
+
+        The KeyHandler generally just gets passed the path to the master key file
+        (which tells the pipeline where to look for other relevant files, imaging recipes
+        etc.), and then will be passed to other handlers for data processing.
+
+        Args:
+            master_key (str, optional): Path to master key file.
+                Defaults to 'key_templates/master_key.txt'.
+            dochecks (bool, optional): Whether to check for missing files.
+                Defaults to True.
+        """
 
         self._dochecks = dochecks
 
@@ -872,7 +880,7 @@ class KeyHandler:
         self._distance_dict = key_readers.batch_read(
             key_list=self._distance_keys, reader_function=key_readers.read_distance_key,
             key_dir=self._key_dir)
-        
+
         self._window_dict = key_readers.batch_read(
             key_list=self._window_keys, reader_function=key_readers.read_window_key,
             key_dir=self._key_dir)
@@ -1343,7 +1351,7 @@ class KeyHandler:
         changeto is true, then change directory to that location.
         """
         return self._get_dir_for_target(target=target, changeto=changeto, vfield=True)
-    
+
     def get_cleanmask_dir_for_target(self, target=None, changeto=False):
         """
         Return the release working directory given a target name. If
@@ -1497,7 +1505,7 @@ class KeyHandler:
             return None
         if 'interf_config' not in self._config_dict.keys():
             return None
-        interf_configs = self._config_dict['interf_config'].keys()
+        interf_configs = list(self._config_dict['interf_config'].keys())
         this_list = \
             list_utils.select_from_list(interf_configs, skip=skip, only=only, loose=True)
         return this_list
@@ -1514,7 +1522,7 @@ class KeyHandler:
             return None
         if 'feather_config' not in self._config_dict.keys():
             return None
-        feather_configs = self._config_dict['feather_config'].keys()
+        feather_configs = list(self._config_dict['feather_config'].keys())
         this_list = \
             list_utils.select_from_list(feather_configs, skip=skip, only=only, loose=True)
         return this_list
@@ -1530,7 +1538,7 @@ class KeyHandler:
             return None
         if 'singledish_config' not in self._config_dict.keys():
             return None
-        singledish_configs = self._config_dict['singledish_config'].keys()
+        singledish_configs = list(self._config_dict['singledish_config'].keys())
         this_list = \
             list_utils.select_from_list(singledish_configs, skip=skip, only=only, loose=True)
         return this_list
@@ -1562,7 +1570,7 @@ class KeyHandler:
             return []
         if 'line_product' not in self._config_dict.keys():
             return []
-        line_products = self._config_dict['line_product'].keys()
+        line_products = list(self._config_dict['line_product'].keys())
         this_list = \
             list_utils.select_from_list(line_products, skip=skip, only=only, loose=True)
         return this_list
@@ -1578,7 +1586,7 @@ class KeyHandler:
             return []
         if 'cont_product' not in self._config_dict.keys():
             return []
-        cont_products = self._config_dict['cont_product'].keys()
+        cont_products = list(self._config_dict['cont_product'].keys())
         this_list = \
             list_utils.select_from_list(cont_products, skip=skip, only=only, loose=True)
         return this_list
@@ -1731,7 +1739,7 @@ class KeyHandler:
                     distance = self._distance_dict[target_name]['distance']
 
         return distance
-    
+
     def get_window_for_target(self, target=None):
         """
         Get the velocity window (in km/s) associated with a target. If the
@@ -2087,6 +2095,23 @@ class KeyHandler:
 
         return None
 
+    def get_require_tags_for_config(self,
+                                    config=None,
+                                    ):
+        """
+        Get the list of required array tags associated with an interferometric configuration.
+        """
+        if config is None:
+            logging.error("Please specify a config.")
+            return None
+
+        if 'interf_config' in self._config_dict:
+            if config in self._config_dict['interf_config']:
+                if 'requires' in self._config_dict['interf_config'][config]:
+                    return self._config_dict['interf_config'][config]['requires']
+
+        return []
+
     def get_timebin_for_array_tag(self, array_tag=None):
         """
         Get the timebin for an array tag. Returns 0s by default.
@@ -2137,10 +2162,9 @@ class KeyHandler:
             config=None,
             project=None,
             check_linmos=False,
-            strict_config=True,
     ):
         """
-        Loop over the the target name, project tag, array tag, and
+        Loop over the target name, project tag, array tag, and
         obsnum for each input visibility file. If a target is supplied
         then restrict to that target, trying to match to a linear
         mosaic if the target is not represented in the dictionary. If
@@ -2148,11 +2172,16 @@ class KeyHandler:
         contribute to that configuration.
 
         Note that the interaction with configs that contain multiple
-        arrays is tricky. By default, if "strict_config" is TRUE, it
-        will only loop over targets that have data from ALL arrays in
-        the configuration. For example to be included in a "12m+7m"
-        configuration you need both "12m" AND "7m" data. Set
-        strict_config to FALSE to adjust this behaviour.
+        arrays is tricky. Use the 'requires' keyword in the
+        config_definitions file to control this. By default, we require ALL
+        arrays that make up the configuration, but this can be changed
+        to an OR if you only need one of a certain combination, e.g.
+
+            interf_config   	  12m       {'array_tags':['12m_1','12m_2']}
+            interf_config   	  12m       {'requires':['12m_1|12m_2']}
+
+        requires only one of 12m_1 or 12m_2 to be present. If an array is not
+        in the 'requires' list, then it is assumed to be required.
         """
 
         # if user has input a target or target list, match to it
@@ -2224,43 +2253,40 @@ class KeyHandler:
                 if not (this_target in just_targets):
                     continue
 
-            # If we're being strict, only consider targets that have
-            # data associated with the user-supplied configs.
+            # This list holds the valid array tags for this target.
+            valid_arraytags = []
 
-            if strict_config:
+            # This mode only works with a user-supplied list of
+            # configs. Else we loop over all measurement sets.
+            if config is not None:
+                if type(config) == type(''):
+                    input_configs = [config]
+                elif type(config) == type([]):
+                    input_configs = config
+                else:
+                    logger.error("Expected list or string.")
+                    raise Exception("Expected list or string.")
 
-                # This list holds the valid array tags for this target.
+                has_data_for_any_config = False
 
-                valid_arraytags = []
+                # Check if the target has data for that configuration
+                for this_config in input_configs:
 
-                # This mode only works with a user-supplied list of
-                # configs. Else we loop over all measurement sets.
+                    if self.has_data_for_config(target=this_target, config=this_config):
+                        has_data_for_any_config = True
 
-                if config is not None:
-                    if type(config) == type(''):
-                        input_configs = [config]
-                    elif type(config) == type([]):
-                        input_configs = config
-                    else:
-                        logger.error("Expected list or string.")
-                        raise Exception("Expected list or string.")
+                        # Note the array tags in this, known to be valid, configuration
+                        this_arraytags = self.get_array_tags_for_config(this_config)
+                        if not isinstance(this_arraytags, list):
+                            raise TypeError("Expected list of array tags.")
 
-                    has_data_for_any_config = False
+                        for this_arraytag in this_arraytags:
+                            if valid_arraytags.count(this_arraytag) == 0:
+                                valid_arraytags.append(this_arraytag)
 
-                    # Check if the target has data for that configuration
-                    for this_config in input_configs:
-
-                        if self.has_data_for_config(target=this_target, config=this_config, strict=True):
-                            has_data_for_any_config = True
-
-                            # Note the array tags in this, known to be valid, configuration
-                            for this_arraytag in self.get_array_tags_for_config(this_config):
-                                if valid_arraytags.count(this_arraytag) == 0:
-                                    valid_arraytags.append(this_arraytag)
-
-                    # If there are no valid configurations skip.
-                    if not has_data_for_any_config:
-                        continue
+                # If there are no valid configurations skip.
+                if not has_data_for_any_config:
+                    continue
 
             # loop over projects
             project_list = list(self._ms_dict[this_target].keys())
@@ -2280,12 +2306,11 @@ class KeyHandler:
                         if not (this_arraytag in just_arraytags):
                             continue
 
-                    if strict_config and config is not None:
+                    if config is not None:
                         if valid_arraytags.count(this_arraytag) == 0:
                             continue
 
                     # loop over obs nums
-
                     obsnum_list = list(self._ms_dict[this_target][this_project][this_arraytag].keys())
                     obsnum_list.sort()
                     for this_obsnum in obsnum_list:
@@ -2363,7 +2388,6 @@ class KeyHandler:
             self,
             target=None,
             config=None,
-            strict=True,
     ):
         """
         Test whether a target has data for a configuration in the ms
@@ -2379,6 +2403,39 @@ class KeyHandler:
             return None
 
         config_array_tags = self.get_array_tags_for_config(config)
+        if not isinstance(config_array_tags, list):
+            raise TypeError("Expected list of array tags.")
+
+        config_require_tags = self.get_require_tags_for_config(config)
+        if not isinstance(config_require_tags, list):
+            raise TypeError("Expected list of require tags.")
+
+        # Combine these into a list of (potentially) lists
+        final_config_array_tags = []
+        for config_array_tag in config_array_tags:
+
+            found_in_require = False
+
+            for config_require_tag in config_require_tags:
+
+                # Split these at the pipe, and see if the current
+                # array tag is already in the list
+                crt_split = config_require_tag.split('|')
+                if config_array_tag in crt_split:
+
+                    found_in_require = True
+
+                    # If we don't already have this in the list,
+                    # then append
+                    if crt_split not in final_config_array_tags:
+                        final_config_array_tags.append(crt_split)
+
+            # If we haven't found a match, then append the original
+            # array tag (as a single-entry list)
+            if not found_in_require:
+                final_config_array_tags.append([config_array_tag])
+
+        config_array_tags = copy.deepcopy(final_config_array_tags)
 
         arraytags_for_target = []
 
@@ -2392,7 +2449,6 @@ class KeyHandler:
                 for this_arraytag in self._ms_dict[this_target][this_project].keys():
                     arraytags_for_target.append(this_arraytag)
 
-        has_any = False
         missing_any = False
 
         for this_config_arraytag in config_array_tags:
@@ -2401,25 +2457,17 @@ class KeyHandler:
 
             for this_target_arraytag in arraytags_for_target:
 
-                if this_config_arraytag == this_target_arraytag:
+                if this_target_arraytag in this_config_arraytag:
                     missing_this_one = False
-                    has_any = True
 
             if missing_this_one:
                 missing_any = True
 
-        if strict:
-            if missing_any:
-                return False
-            else:
-                return True
-        else:
-            if has_any:
-                return True
-            else:
-                return False
+        # If we don't match everything, return a false
+        if missing_any:
+            return False
 
-        return False
+        return True
 
     def get_field_for_input_ms(
             self,
@@ -2656,7 +2704,7 @@ class KeyHandler:
 
         return feather_config_dict[feather_config]['interf_config']
 
-    def get_clean_scales_for_config(
+    def get_clean_scales_arcsec_for_config(
             self,
             config=None,
     ):
@@ -2668,12 +2716,92 @@ class KeyHandler:
         if config is None:
             return None
 
-        if config in self._config_dict['interf_config'].keys():
-            this_dict = self._config_dict['interf_config'][config]
-        else:
+        clean_scales_arcsec = self._config_dict.get("interf_config", {}).get(config, {}).get("clean_scales_arcsec", [])
+
+        return clean_scales_arcsec
+
+    def get_clean_scales_beam_for_config(
+            self,
+            config=None,
+    ):
+        """
+        Return the angular scales as multiples of the beam
+        used for multiscale clean for an interferometric configuration.
+        """
+
+        if config is None:
             return None
 
-        return this_dict['clean_scales_arcsec']
+        clean_scales_beam = self._config_dict.get("interf_config", {}).get(config, {}).get("clean_scales_beam", [])
+
+        return clean_scales_beam
+
+    def get_clean_scales_auto_for_config(
+            self,
+            config=None,
+    ):
+        """
+        Return whether we are automatically setting clean
+        scales for multiscale clean for an interferometric configuration.
+        """
+
+        if config is None:
+            return False
+
+        clean_scales_auto = (
+            self._config_dict.get("interf_config", {})
+            .get(config, {})
+            .get("clean_scales_auto", False)
+        )
+
+        return clean_scales_auto
+
+    def get_clean_scales_auto_factor_for_config(
+        self,
+        config=None,
+    ):
+        """
+        Return the multiplicative factor for automatic clean scale
+        """
+
+        if config is None:
+            return None
+
+        clean_scales_auto_factor = (
+            self._config_dict.get("interf_config", {})
+            .get(config, {})
+            .get("clean_scales_auto_factor", 3)
+        )
+
+        # If we have a value less than 1, then we won't converge
+        if clean_scales_auto_factor <= 1:
+            logger.warning("clean_scales_auto_factor should not be smaller than 1. Will set to 1.1")
+            clean_scales_auto_factor = 1.1
+
+        return clean_scales_auto_factor
+
+    def get_clean_scales_max_las_fraction_for_config(
+        self,
+        config=None,
+    ):
+        """
+        Return the maximum fraction of the LAS for automatic clean scale
+        """
+
+        if config is None:
+            return None
+
+        clean_scales_max_las_fraction = (
+            self._config_dict.get("interf_config", {})
+            .get(config, {})
+            .get("clean_scales_max_las_fraction", 0.5)
+        )
+
+        if clean_scales_max_las_fraction > 1:
+            logger.warning("clean_scales_max_las_fraction should not be larger than 1. Will set to 1")
+            clean_scales_max_las_fraction = 1
+
+        return clean_scales_max_las_fraction
 
     def get_ang_res_dict(self, config=None, product=None,
                          ):
@@ -2749,7 +2877,7 @@ class KeyHandler:
 
         if product not in self._derived_dict[config].keys():
             return {}
-        
+
         if kwarg_type not in self._derived_dict[config][product].keys():
             return {}
 
@@ -2853,10 +2981,33 @@ class KeyHandler:
             logger.info("... " + this_config)
             this_arrays = self._config_dict['interf_config'][this_config]['array_tags']
             this_other_config = self._config_dict['interf_config'][this_config]['feather_config']
-            scales_for_clean = self._config_dict['interf_config'][this_config]['clean_scales_arcsec']
+
+            # Get out various clean scales
+            scales_for_clean_arcsec = self.get_clean_scales_arcsec_for_config(this_config)
+            if scales_for_clean_arcsec is None:
+                scales_for_clean_arcsec = []
+
+            scales_for_clean_beam = self.get_clean_scales_beam_for_config(this_config)
+            if scales_for_clean_beam is None:
+                scales_for_clean_beam = []
+
+            scales_for_clean_auto = self.get_clean_scales_auto_for_config(this_config)
+
             logger.info("... ... includes arrays " + str(this_arrays))
             logger.info("... ... maps to feather config " + str(this_other_config))
-            logger.info("... ... clean these scales in arcsec " + str(scales_for_clean))
+
+            if scales_for_clean_auto:
+                logger.info("... ... automatically set clean scales")
+            else:
+
+                # Crash out if we don't have any clean scales defined
+                if len(scales_for_clean_beam) + len(scales_for_clean_arcsec) == 0:
+                    raise ValueError("At least one of clean_scales_arcsec, clean_scales_beam must be defined")
+
+                if len(scales_for_clean_arcsec) > 0:
+                    logger.info("... ... clean these scales in arcsec: " + str(scales_for_clean_arcsec))
+                if len(scales_for_clean_beam) > 0:
+                    logger.info("... ... clean these scales as multiples of the beam: " + str(scales_for_clean_beam))
 
         if 'feather_config' in self._config_dict:
             logger.info("Feather Configurations")
