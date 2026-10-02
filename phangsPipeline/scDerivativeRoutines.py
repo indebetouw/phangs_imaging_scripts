@@ -1,5 +1,6 @@
 import inspect
 import logging
+import time
 
 import astropy.units as u
 import numpy as np
@@ -934,7 +935,17 @@ def write_tmax(cubein,
         dv = channel_width(new_cube)
         nChan = (window / dv).to(u.dimensionless_unscaled).value
         if nChan > 1:
+            logger.info(
+                "Starting Tpeak spectral smoothing with window=%s (%s channels)",
+                window,
+                nChan,
+            )
+            t0 = time.time()
             cube = new_cube.spectral_smooth(Box1DKernel(nChan))
+            logger.info(
+                "Finished Tpeak spectral smoothing in %.3f s",
+                time.time() - t0,
+            )
             rmsfac = 1/np.sqrt(nChan)
         else:
             cube = new_cube
