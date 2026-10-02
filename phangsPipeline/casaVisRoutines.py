@@ -535,6 +535,7 @@ def find_spws_for_line(
     # Work out the frequencies at the line edes.
 
     line_low_ghz, line_high_ghz = lines.get_ghz_range_for_line(
+        line=line,
         restfreq_ghz=restfreq_ghz,
         vsys_kms=vsys_kms, vwidth_kms=vwidth_kms,
         vlow_kms=vlow_kms, vhigh_kms=vhigh_kms)
