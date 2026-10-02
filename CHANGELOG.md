@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix crashes in suggest_extraction_scheme for cont extraction (#352).
 - Bugfix boolean operations (#391)
 - Pass imaging_method to task_align_for_mosaic for sdintimaging (#400).
+- Appropriately change spectral units from velocity to frequency when regridding (#398).
+- Ensure fits import adds Stokes axis in feather routines (#407).
 
 ### Dependencies
 - Bump actions/upload-artifact from 6 to 7 (#313).
@@ -71,3 +73,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump `actions/checkout` from 5 to 7 ([#327](https://github.com/PhangsTeam/phangs_imaging_scripts/pull/327), [#361](https://github.com/PhangsTeam/phangs_imaging_scripts/pull/361))
 - Bump `actions/setup-python` from 6 to 7 ([#367](https://github.com/PhangsTeam/phangs_imaging_scripts/pull/367))
 - Bump `tarides/changelog-check-action` from 3 to 4 ([#368](https://github.com/PhangsTeam/phangs_imaging_scripts/pull/368))
+- Bump convolve-uv from >=0.2.0 to >=0.5.0 (#408)
