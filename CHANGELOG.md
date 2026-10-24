@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved convolution with spectral-cube, including new analytic support for small kernels (#385).
 - Add tests for utilsLines, and tidy up formatting (#403).
 - Add optional file string in derived for nonstandard workflows (#406).
+- Use SD pipeline weights in single-dish linear mosaicking (#397).
+- Expose ``min_pixperbeam`` for cube compression in ``loop_postprocess`` (#411).
 
 ### Changed
 
@@ -66,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Appropriately change spectral units from velocity to frequency when regridding (#398).
 - Ensure fits import adds Stokes axis in feather routines (#407).
 - Fixed regression in get_ghz_range_for_line (#409).
+- Remove obsolete keywords so legacy singledish pipeline works again (#410).
 
 ### Dependencies
 - Bump actions/upload-artifact from 6 to 7 (#313).
@@ -75,3 +78,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump `actions/setup-python` from 6 to 7 ([#367](https://github.com/PhangsTeam/phangs_imaging_scripts/pull/367))
 - Bump `tarides/changelog-check-action` from 3 to 4 ([#368](https://github.com/PhangsTeam/phangs_imaging_scripts/pull/368))
 - Bump convolve-uv from >=0.2.0 to >=0.5.0 (#408)
+- Bump `spectral-cube` from 0.6.7 to 0.7.0 ([#412](https://github.com/PhangsTeam/phangs_imaging_scripts/pull/412))
