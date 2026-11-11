@@ -1561,13 +1561,16 @@ if casa_enabled:
 
                 outfile = outdir + this_part_dict_out[out_tag]
 
+                # Append a .fits if we're using spectral-cube
+                if postprocessing_method == "spectralcube":
+                    infile += ".fits"
+                    outfile += ".fits"
+
+                #if os.path.exists(outfile):
+                #    logger.info("Skipping existing mosaic tile output for %s: %s", this_part, outfile)
+                #    continue
+
                 if infile_exists:
-
-                    # Append a .fits if we're using spectral-cube
-                    if postprocessing_method == "spectralcube":
-                        infile += ".fits"
-                        outfile += ".fits"
-
                     infile_list.append(infile)
                     outfile_list.append(outfile)
                 else:
@@ -1596,6 +1599,10 @@ if casa_enabled:
 
             # TBD - check override dict for target
             # resolution and (maybe?) pixel padding.
+
+            # TODO: remove from infile and outfile_lists any existing commonres files, 
+            # if they already have the target res.  this is better than the guard above, because
+            # we want all images to go to the commonres target_res calculation
 
             if not self._dry_run:
                 if postprocessing_method == "casa":
@@ -1711,13 +1718,18 @@ if casa_enabled:
 
                     outfile = outdir + this_part_dict_out[this_tag_out]
 
+                    # Append the .fits if we're postprocessing using spectralcube
+                    if postprocessing_method == "spectralcube":
+                        infile += ".fits"
+                        outfile += ".fits"
+
+                    # per-tile aligned-output skip guard, msut be disabled to rebuild 
+                    # linmos template headers (_flux/_weight/_mask.txt).
+                    # if os.path.exists(outfile):
+                    #     logger.info("Skipping existing aligned mosaic tile output for %s: %s", this_part, outfile)
+                    #     continue
+
                     if infile_exists:
-
-                        # Append the .fits if we're postprocessing using spectralcube
-                        if postprocessing_method == "spectralcube":
-                            infile += ".fits"
-                            outfile += ".fits"
-
                         infile_list.append(infile)
                         outfile_list.append(outfile)
                     else:

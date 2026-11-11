@@ -67,10 +67,11 @@ def estimate_cell_and_imsize(
                                                 imsize=True,
                                                 npix=oversamp,
                                                 intent='',
-                                                pblevel=pblevel,
+                                                # pblevel=pblevel,  # plotmosaic default is 0.05 which should be conservative enough for most cases
                                                 )
-    xextent = au_cellsize * au_imsize[0] * 1.2
-    yextent = au_cellsize * au_imsize[1] * 1.2
+    # pickCellSize (actually plotmosaic already adds 1.2 on either side, so we don't need to do that here)
+    xextent = au_cellsize * au_imsize[0] #* 1.2
+    yextent = au_cellsize * au_imsize[1] #* 1.2
 
     # Make the cell size a nice round number
 

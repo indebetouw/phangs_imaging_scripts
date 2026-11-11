@@ -1447,7 +1447,7 @@ if casa_enabled:
                         threshold_type='snr',
                         threshold_value=threshold_value,
                         min_loops=3,
-                        max_loops=20,
+                        max_loops=50,
                         max_total_niter=None,
                         convergence_fracflux=convergence_fracflux,
                         convergence_totalflux=None,

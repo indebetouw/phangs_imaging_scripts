@@ -10,7 +10,6 @@ import analysisUtils as au
 import numpy as np
 
 from .casaStuff import imhead
-from .casaVisRoutines import estimate_mrs
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +176,8 @@ class CleanCall:
 
             # Calculate LAS and beam size
             vis = self.get_param("vis")
+            # Local import avoids circular package initialization through __init__.py.
+            from .casaVisRoutines import estimate_mrs
             mrs_dict = estimate_mrs(vis)
             las = mrs_dict["mrs"]
             beam = self.estimate_synthesised_beam(imaging_method=imaging_method)
