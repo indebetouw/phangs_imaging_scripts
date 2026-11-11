@@ -29,8 +29,6 @@ else:
 
 if casa_enabled:
 
-    import analysisUtils as au
-
     from . import casaImagingRoutines as imr
     from . import casaMaskingRoutines as msr
     from . import casaStuff
@@ -59,6 +57,7 @@ if casa_enabled:
             set_cell_imsize_on_init=True,
             force_square=False,
             oversamp=5,
+            check_overrides=True,
             make_temp_dir=True,
             temp_key=None,
             temp_path=None,
@@ -91,6 +90,9 @@ if casa_enabled:
                 If True, force the image size to be square. Defaults to False.
             oversamp : int, optional
                 The oversampling factor of pixels per beam FWHM. Defaults to 5.
+            check_overrides : bool, optional
+                If True, apply user-set 'cell', 'deltara' and 'deltadec' overrides
+                from the override key file, as in ImagingHandler. Defaults to True.
             make_temp_dir : bool, optional
                 If True, make a temporary directory. Defaults to True.
             temp_key : str, optional
@@ -111,6 +113,16 @@ if casa_enabled:
             self.target = target
             self.config = config
             self.product = product
+
+            # Linear mosaic targets have no MS of their own, so there is nothing to image.
+            # Skip them gracefully, as the standard ImagingHandler does
+            self.skip_target = self._kh.is_target_linmos(self.target)
+            if self.skip_target:
+                logger.warning(f"Target {self.target} is a linear mosaic, so has no visibilities to image. "
+                               "Skipping.")
+                self.chunk_params = {}
+                self.nchunks = 0
+                return
 
             # Enforce that chunked imaging be used for cubes only.
             # Otherwise, there's no need for this approach:
@@ -163,7 +175,9 @@ if casa_enabled:
             # TODO: this will fail if false as we need it for the base call.
             # Could just not give the option and force computing this on init
             if set_cell_imsize_on_init:
-                self.set_cube_cell_and_imsize(force_square=force_square, oversamp=oversamp)
+                self.set_cube_cell_and_imsize(
+                    force_square=force_square, oversamp=oversamp,
+                    check_overrides=check_overrides)
 
             # Find the number of channels in the MS to image
             # This defaults to using all (assuming it's a staged MS)
@@ -419,6 +433,10 @@ if casa_enabled:
                 do_export_to_fits = True
                 do_cleanup = True
 
+            if self.skip_target:
+                logger.warning(f"Target {self.target} is a linear mosaic. Skipping imaging.")
+                return
+
             cwd = os.getcwd()
 
             # Create the imaging directory if it doesn't exist
@@ -539,7 +557,7 @@ if casa_enabled:
         #     chunks_iter = self.return_valid_chunks(chunk_num=chunk_num)
 
         #     # TODO: move to helper function.
-        #     mytb = au.createCasaTool(casaStuff.tbtool)
+        #     mytb = casaStuff.tbtool()
         #     mytb.open(self.full_vis_file, nomodify = True)
         #     colnames = mytb.colnames()
         #     if 'CORRECTED_DATA' in colnames:
@@ -590,8 +608,8 @@ if casa_enabled:
 
             chunks_iter = self.return_valid_chunks(chunk_num=chunk_num)
 
-            myia = au.createCasaTool(casaStuff.iatool)
-            myrg = au.createCasaTool(casaStuff.rgtool)
+            myia = casaStuff.iatool()
+            myrg = casaStuff.rgtool()
 
             myia.open(imagename)
 
@@ -625,9 +643,6 @@ if casa_enabled:
                     else:
                         logger.info("Chunked vis for channels {} already exists. Skipping".format(key))
                         continue
-
-                if verbose:
-                    print("On channel "+str(chan+1)+" of "+str(start+nchan))
 
                 lower_corner = [0] * ndims
                 upper_corner = copy(cube_shape)
@@ -740,9 +755,13 @@ if casa_enabled:
 
             return (clean_call)
 
-        def set_cube_cell_and_imsize(self, force_square=False, oversamp=5):
+        def set_cube_cell_and_imsize(self, force_square=False, oversamp=5, check_overrides=True):
             '''
             Set a single cell and imsize for all chunks.
+
+            This calls casaImagingRoutines.estimate_cell_and_imsize() first,
+            then applies user-defined overrides (cell, deltara, deltadec; all in
+            arcsec) if they exist, following ImagingHandler.task_pick_cell_and_imsize().
             '''
 
             logger.info("")
@@ -754,15 +773,70 @@ if casa_enabled:
 
             # Call the estimating routine
             if not self._dry_run:
-                self.cell, self.imsize = \
+                cell, imsize = \
                     imr.estimate_cell_and_imsize(self.full_vis_file,
                                                  oversamp,
                                                  force_square=force_square)
             else:
-                self.cell, self.imsize = '0.1arcsec', [1000, 1000]
+                cell, imsize = '0.1arcsec', [1000, 1000]
                 logger.info('DRY RUN skips calling imr.estimate_cell_and_imsize()')
 
-            logger.info('cell={0}; imsize={1}'.format(self.cell, self.imsize))
+            imsize = [int(x) for x in imsize]
+
+            logger.info('cell={0}; imsize={1}'.format(cell, imsize))
+
+            # Check user-defined overriding parameters: cell deltara deltadec
+            # (pixel size and width/height of the field of view in arcsec).
+            # Search order: target_config_product -> target_config -> target -> all
+            if check_overrides:
+                override_keys = [
+                    self.target + '_' + self.config + '_' + self.product,
+                    self.target + '_' + self.config,
+                    self.target,
+                    'all',
+                ]
+                override_cell = None
+                override_deltara = None
+                override_deltadec = None
+                for override_key in override_keys:
+                    if override_cell is None:
+                        override_cell = self._kh.get_overrides(override_key, 'cell')
+                    if override_deltara is None:
+                        override_deltara = self._kh.get_overrides(override_key, 'deltara')
+                    if override_deltadec is None:
+                        override_deltadec = self._kh.get_overrides(override_key, 'deltadec')
+
+                orig_cell_arcsec = float(str(cell).replace('arcsec', ''))
+                if override_cell is not None:
+                    logger.info('applying overriding cell ' + str(override_cell) + ' arcsec')
+                    cell_arcsec = np.abs(float(override_cell))
+                    cell = str(cell_arcsec) + 'arcsec'
+                else:
+                    cell_arcsec = orig_cell_arcsec
+
+                # Recompute imsize so the field of view is preserved (or overridden),
+                # always using an even number of pixels
+                orig_imsize = list(imsize)
+                if override_deltara is not None:
+                    logger.info('applying overriding deltara ' + str(override_deltara) + ' arcsec')
+                    deltara = np.abs(float(override_deltara))
+                else:
+                    deltara = orig_imsize[0] * orig_cell_arcsec
+                if override_deltara is not None or cell_arcsec != orig_cell_arcsec:
+                    imsize[0] = int(np.ceil(deltara / cell_arcsec / 2.0) * 2)
+
+                if override_deltadec is not None:
+                    logger.info('applying overriding deltadec ' + str(override_deltadec) + ' arcsec')
+                    deltadec = np.abs(float(override_deltadec))
+                else:
+                    deltadec = orig_imsize[1] * orig_cell_arcsec
+                if override_deltadec is not None or cell_arcsec != orig_cell_arcsec:
+                    imsize[1] = int(np.ceil(deltadec / cell_arcsec / 2.0) * 2)
+
+                if any(x is not None for x in [override_cell, override_deltara, override_deltadec]):
+                    logger.info('cell={0}; imsize={1} (after overrides)'.format(cell, imsize))
+
+            self.cell, self.imsize = cell, imsize
 
 
         @CleanCallFunctionDecorator
@@ -1484,6 +1558,10 @@ if casa_enabled:
             '''
             Intended to create a final set of cubes.
             '''
+
+            if self.skip_target:
+                logger.warning(f"Target {self.target} is a linear mosaic. Skipping gathering into cubes.")
+                return
 
             accepted_root_names = ['dirty', 'singlescale', 'multiscale', None]
 
