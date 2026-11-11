@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add optional file string in derived for nonstandard workflows (#406).
 - Use SD pipeline weights in single-dish linear mosaicking (#397).
 - Expose ``min_pixperbeam`` for cube compression in ``loop_postprocess`` (#411).
+- Allow override parameters in chunked imaging handler (#417).
+- Added support for gridding multiple singledish mosaics in the singledish pipeline (#414).
 
 ### Changed
 
@@ -42,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use spectral-cube common beam calculations for common beams (#385).
 - Mosaic weights are now generated after convolution and regridding, and will undo any primary beam corrections (#396).
 - Don't skip making large mosaics (but keep the log messages to inform users this is happening) (#405).
+- Begin removal of analysisUtils (#402).
 
 ### Fixed
 
@@ -69,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensure fits import adds Stokes axis in feather routines (#407).
 - Fixed regression in get_ghz_range_for_line (#409).
 - Remove obsolete keywords so legacy singledish pipeline works again (#410).
+- ``ImagingChunkedHandler`` skips linear mosaic targets rather than crashing (#413).
 
 ### Dependencies
 - Bump actions/upload-artifact from 6 to 7 (#313).
