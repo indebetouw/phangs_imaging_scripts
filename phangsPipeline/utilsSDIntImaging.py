@@ -14,8 +14,6 @@ from spectral_cube import (
 )
 from uvcombine import feather_simple, feather_simple_cube
 
-from .casaCubeRoutines import check_getchunk_putchunk_memory_issue
-
 logger = logging.getLogger(__name__)
 
 
@@ -233,6 +231,10 @@ def feather_int_sd(
         jointim = image()
         jointim.open(jointcube)
         jointim.set(0.0)  # Initialize this to zero for all planes
+
+        # Import lazily to avoid a circular import while casaStuff -> taskSDIntImaging -> utilsSDIntImaging
+        # is still being initialized.
+        from .casaCubeRoutines import check_getchunk_putchunk_memory_issue
 
         # Check if getchunk/putchunk will have memory issues. If so, we need to do this channel by channel
         has_memory_issue = check_getchunk_putchunk_memory_issue(

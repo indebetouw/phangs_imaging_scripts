@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 def writer(projection, filename, overwrite=True, dtype=np.float32):
     hdu = fits.PrimaryHDU(projection.hdu.data.astype(dtype),
                           header=projection._header)
+    print("writing {0} to disk".format(filename))
     hdu.writeto(filename, overwrite=overwrite)
 
 

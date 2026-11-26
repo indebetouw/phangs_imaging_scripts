@@ -1367,6 +1367,13 @@ class DerivedHandler(handlerTemplate.HandlerTemplate):
             sublist_of_moments = [this_mom for this_mom in list_of_moments
                                   if self._kh.get_params_for_moment(this_mom)['round'] == thisround]
 
+            # Secondary moments are intended for strict/broad-mask products
+            # (e.g., mom1wprior), not flat-mask products.
+            sublist_of_moments = [
+                this_mom for this_mom in sublist_of_moments
+                if self._kh.get_params_for_moment(this_mom)['mask'] not in ['flatstrictmask', 'flatbroadmask']
+            ]
+
             if (not self._dry_run):
                 for this_mom in sublist_of_moments:
                     logger.info('... generating moment: ' + str(this_mom))
@@ -1999,11 +2006,20 @@ class DerivedHandler(handlerTemplate.HandlerTemplate):
 
         logger.info("... Total stages of moment calculation: {0}".format(len(uniqrounds)))
 
-        for thisround in uniqrounds[2:3]:
+        flat_moments = [
+            this_mom for this_mom in list_of_moments
+            if self._kh.get_params_for_moment(this_mom)['mask'] in ['flatstrictmask', 'flatbroadmask']
+        ]
+
+        flat_rounds = sorted(list(set([
+            self._kh.get_params_for_moment(this_mom)['round'] for this_mom in flat_moments
+        ])))
+
+        for thisround in flat_rounds:
             logger.info("... Now, calculate all moments in stage {0}".format(thisround))
             logger.info("")
 
-            sublist_of_moments = [this_mom for this_mom in list_of_moments
+            sublist_of_moments = [this_mom for this_mom in flat_moments
                                   if self._kh.get_params_for_moment(this_mom)['round'] == thisround]
 
             if (not self._dry_run):
