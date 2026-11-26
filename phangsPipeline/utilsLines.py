@@ -17,6 +17,7 @@ line_families = {
     "c18o": ["c18o10", "c18o21", "c18o32", "c18o43", "c18o54", "c18o65"],
     "c17o": ["c17o10", "c17o21", "c17o32", "c17o43", "c17o54", "c17o65"],
     "hcn": ["hcn10", "hcn21", "hcn32", "hcn43", "hcn54", "hcn65", "hcn76"],
+    "h2co": ["h2co303","h2co322", "h2co321"],
     "h13cn": [
         "h13cn10",
         "h13cn21",
@@ -305,6 +306,9 @@ line_list = {
     "oh1667": 1.66735900,
     "oh1720": 1.72052990,
     "cch10_21": 87.31692500,  # N= 1-0, J=3/2-1/2, F= 2-1
+    "h2co303": 218.22219,
+    "h2co322": 218.47563,
+    "h2co321": 218.76007,
     # Couple of expected failure cases
     123: 123.456,
     "failure_case": "frequency_in_wrong_type",
